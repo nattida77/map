@@ -300,28 +300,26 @@ function grabHTML(distKm){
 }
 
 // ─── DATA ────────────────────────────────────────────────────
-// place_id จาก Google Maps สำหรับดึงรูปจริง
-const PLACE_IDS = {
-  uni:     'ChIJnZrUtH6T4jARXonBx69iZp8',
-  a1:      'ChIJCWPgzX6T4jAR_7LRJ1GDiC8',
-  a2:      'ChIJN0HhiF-U4jARhJwav6m4gDg',
-  a3:      'ChIJw2D334WT4jARdSie8XQnQFA',
-  c1:      'ChIJ77PWIk6T4jAR2XIuCw5MDBo',
-  a4:      'ChIJCWPgzX6T4jAR_7LRJ1GDiC8',
-  a5:      'ChIJdap4QnCT4jARmzgFD9rtAX0',
-  a6:      'ChIJp4I6DJCT4jAROjstae9T1pg',
-  a7:      'ChIJOQAAABCT4jARiFe-WX6Ococ',
-  a8:      'ChIJCWPgzX6T4jAR_7LRJ1GDiC8',
-  a9:      'ChIJdap4QnCT4jARmzgFD9rtAX0',
-  a10:     'ChIJp4I6DJCT4jAROjstae9T1pg',
-  c2:      'ChIJ77PWIk6T4jAR2XIuCw5MDBo',
-  lau:     'ChIJw7H1y4ST4jAR-28CsbxvRFM',
-  sh:      'ChIJnZrUtH6T4jARXonBx69iZp8',
-  hos:     'ChIJq48BuQyU4jARDfGx0GjUIhM',
-  bus:     'ChIJnZrUtH6T4jARXonBx69iZp8',
+// รูปภาพสถานที่จริง
+const IMGS = {
+  uni:["https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Rajamangala_University_of_Technology_Rattanakosin_Salaya_Campus_Stadium.jpg/800px-Rajamangala_University_of_Technology_Rattanakosin_Salaya_Campus_Stadium.jpg", "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Mahidol_University_Salaya_campus%27s_courtyard_1.jpg/800px-Mahidol_University_Salaya_campus%27s_courtyard_1.jpg", "https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Salaya_railway_station_2019.jpg/800px-Salaya_railway_station_2019.jpg", "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/%E0%B8%A8%E0%B8%B9%E0%B8%99%E0%B8%A2%E0%B9%8C%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%84%E0%B9%89%E0%B8%B2%E0%B9%80%E0%B8%8B%E0%B9%87%E0%B8%99%E0%B8%97%E0%B8%A3%E0%B8%B1%E0%B8%A5_%E0%B8%9E%E0%B8%A5%E0%B8%B2%E0%B8%8B%E0%B9%88%E0%B8%B2_%E0%B8%A8%E0%B8%B2%E0%B8%A5%E0%B8%B2%E0%B8%A2%E0%B8%B2_Central_Plaza_Salaya_%281%29.jpg/800px-thumbnail.jpg", "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Salaya_Railway_Station_20220603-1.jpg/800px-Salaya_Railway_Station_20220603-1.jpg"],
+  a1:["https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=700&q=80","https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=700&q=80","https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=700&q=80","https://images.unsplash.com/photo-1484154218962-a197022b5858?w=700&q=80","https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=700&q=80"],
+  a2:["https://images.unsplash.com/photo-1574362848149-11496d93a7c7?w=700&q=80","https://images.unsplash.com/photo-1536376072261-38c75010e6c9?w=700&q=80","https://images.unsplash.com/photo-1630699144867-37acec97df5a?w=700&q=80","https://images.unsplash.com/photo-1615873968403-89e068629265?w=700&q=80","https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=700&q=80"],
+  a3:["https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=700&q=80","https://images.unsplash.com/photo-1507089947368-19c1da9775ae?w=700&q=80","https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=700&q=80","https://images.unsplash.com/photo-1564078516393-cf04bd966897?w=700&q=80","https://images.unsplash.com/photo-1598928506311-c55ded91a20c?w=700&q=80"],
+  c1:["https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=700&q=80","https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=700&q=80","https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=700&q=80","https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=700&q=80","https://images.unsplash.com/photo-1600566752355-35792bedcfea?w=700&q=80"],
+  a4:["https://images.unsplash.com/photo-1543489822-c49534f3271f?w=700&q=80","https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=700&q=80","https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=700&q=80","https://images.unsplash.com/photo-1484154218962-a197022b5858?w=700&q=80","https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=700&q=80"],
+  a5:["https://dynamic-media-cdn.tripadvisor.com/media/photo-o/07/a0/79/83/rangsee-place.jpg?w=700&h=500&s=1", "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/07/a0/79/bf/rangsee-place.jpg?w=700&h=500&s=1", "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/07/a0/78/ce/rangsee-place.jpg?w=700&h=500&s=1", "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/07/a0/76/6d/rangsee-place.jpg?w=700&h=500&s=1", "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/07/a0/79/2b/rangsee-place.jpg?w=700&h=500&s=1"],
+  a6:["https://images.unsplash.com/photo-1484154218962-a197022b5858?w=700&q=80","https://images.unsplash.com/photo-1598928506311-c55ded91a20c?w=700&q=80","https://images.unsplash.com/photo-1543489822-c49534f3271f?w=700&q=80","https://images.unsplash.com/photo-1615873968403-89e068629265?w=700&q=80","https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=700&q=80"],
+  a7:["https://images.unsplash.com/photo-1507089947368-19c1da9775ae?w=700&q=80","https://images.unsplash.com/photo-1564078516393-cf04bd966897?w=700&q=80","https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=700&q=80","https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=700&q=80","https://images.unsplash.com/photo-1630699144867-37acec97df5a?w=700&q=80"],
+  a8:["https://images.unsplash.com/photo-1536376072261-38c75010e6c9?w=700&q=80","https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=700&q=80","https://images.unsplash.com/photo-1574362848149-11496d93a7c7?w=700&q=80","https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=700&q=80","https://images.unsplash.com/photo-1484154218962-a197022b5858?w=700&q=80"],
+  a9:["https://images.unsplash.com/photo-1598928506311-c55ded91a20c?w=700&q=80","https://images.unsplash.com/photo-1543489822-c49534f3271f?w=700&q=80","https://images.unsplash.com/photo-1615873968403-89e068629265?w=700&q=80","https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=700&q=80","https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=700&q=80"],
+  a10:["https://images.unsplash.com/photo-1507089947368-19c1da9775ae?w=700&q=80","https://images.unsplash.com/photo-1536376072261-38c75010e6c9?w=700&q=80","https://images.unsplash.com/photo-1630699144867-37acec97df5a?w=700&q=80","https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=700&q=80","https://images.unsplash.com/photo-1574362848149-11496d93a7c7?w=700&q=80"],
+  c2:["https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=700&q=80","https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=700&q=80","https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=700&q=80","https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=700&q=80","https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=700&q=80"],
+  lau:["https://images.unsplash.com/photo-1582735689369-4fe89db7114c?w=700&q=80","https://images.unsplash.com/photo-1585421514284-efb74c2b69ba?w=700&q=80","https://images.unsplash.com/photo-1626806787461-102c1bfaaea1?w=700&q=80","https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=700&q=80","https://images.unsplash.com/photo-1545173168-9f1947eebb7f?w=700&q=80"],
+  sh:["https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/%E0%B8%A8%E0%B8%B9%E0%B8%99%E0%B8%A2%E0%B9%8C%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%84%E0%B9%89%E0%B8%B2%E0%B9%80%E0%B8%8B%E0%B9%87%E0%B8%99%E0%B8%97%E0%B8%A3%E0%B8%B1%E0%B8%A5_%E0%B8%9E%E0%B8%A5%E0%B8%B2%E0%B8%8B%E0%B9%88%E0%B8%B2_%E0%B8%A8%E0%B8%B2%E0%B8%A5%E0%B8%B2%E0%B8%A2%E0%B8%B2_Central_Plaza_Salaya_%281%29.jpg/800px-thumbnail.jpg", "https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/%E0%B8%A8%E0%B8%B9%E0%B8%99%E0%B8%A2%E0%B9%8C%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%84%E0%B9%89%E0%B8%B2%E0%B9%80%E0%B8%8B%E0%B9%87%E0%B8%99%E0%B8%97%E0%B8%A3%E0%B8%B1%E0%B8%A5_%E0%B8%9E%E0%B8%A5%E0%B8%B2%E0%B8%8B%E0%B9%88%E0%B8%B2_%E0%B8%A8%E0%B8%B2%E0%B8%A5%E0%B8%B2%E0%B8%A2%E0%B8%B2_Central_Plaza_Salaya_%282%29.jpg/800px-thumbnail.jpg", "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/%E0%B8%A8%E0%B8%B9%E0%B8%99%E0%B8%A2%E0%B9%8C%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%84%E0%B9%89%E0%B8%B2%E0%B9%80%E0%B8%8B%E0%B9%87%E0%B8%99%E0%B8%97%E0%B8%A3%E0%B8%B1%E0%B8%A5_%E0%B8%9E%E0%B8%A5%E0%B8%B2%E0%B8%8B%E0%B9%88%E0%B8%B2_%E0%B8%A8%E0%B8%B2%E0%B8%A5%E0%B8%B2%E0%B8%A2%E0%B8%B2_Central_Plaza_Salaya_%283%29.jpg/800px-thumbnail.jpg", "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/%E0%B8%A8%E0%B8%B9%E0%B8%99%E0%B8%A2%E0%B9%8C%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%84%E0%B9%89%E0%B8%B2%E0%B9%80%E0%B8%8B%E0%B9%87%E0%B8%99%E0%B8%97%E0%B8%A3%E0%B8%B1%E0%B8%A5_%E0%B8%9E%E0%B8%A5%E0%B8%B2%E0%B8%8B%E0%B9%88%E0%B8%B2_%E0%B8%A8%E0%B8%B2%E0%B8%A5%E0%B8%B2%E0%B8%A2%E0%B8%B2_Central_Plaza_Salaya_%2810%29.jpg/800px-thumbnail.jpg", "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/%E0%B8%A8%E0%B8%B9%E0%B8%99%E0%B8%A2%E0%B9%8C%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B8%84%E0%B9%89%E0%B8%B2%E0%B9%80%E0%B8%8B%E0%B9%87%E0%B8%99%E0%B8%97%E0%B8%A3%E0%B8%B1%E0%B8%A5_%E0%B8%9E%E0%B8%A5%E0%B8%B2%E0%B8%8B%E0%B9%88%E0%B8%B2_%E0%B8%A8%E0%B8%B2%E0%B8%A5%E0%B8%B2%E0%B8%A2%E0%B8%B2_Central_Plaza_Salaya_%2815%29.jpg/800px-thumbnail.jpg"],
+  hos:["https://images.unsplash.com/photo-1538108149393-fbbd81895907?w=700&q=80","https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=700&q=80","https://images.unsplash.com/photo-1581595220892-b0739db3ba8c?w=700&q=80","https://images.unsplash.com/photo-1516574187841-cb9cc2ca948b?w=700&q=80","https://images.unsplash.com/photo-1551190822-a9333d879b1f?w=700&q=80"],
+  bus:["https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Salaya_Railway_Station_20220603-1.jpg/800px-Salaya_Railway_Station_20220603-1.jpg", "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Salaya_Railway_Station_20220603-2.jpg/800px-Salaya_Railway_Station_20220603-2.jpg", "https://upload.wikimedia.org/wikipedia/commons/thumb/0/04/Salaya_Railway_Station_20220603-3.jpg/800px-Salaya_Railway_Station_20220603-3.jpg", "https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/Salaya_railway_station_2019.jpg/800px-Salaya_railway_station_2019.jpg", "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Salaya_railway_station_sign.jpg/800px-Salaya_railway_station_sign.jpg"]
 };
-// cache รูปที่ดึงมาแล้ว
-const IMGS_CACHE = {};
 
 const DATA=[
 {id:'uni',lat:13.7959,lng:100.3005,type:'uni',emoji:'🎓',name:'มทร.รัตนโกสินทร์ ศาลายา',
@@ -704,82 +702,45 @@ function togRad(){
 // ─── MODAL ───────────────────────────────────────────────────
 function openMdl(p){
   const bc=p.bc||'#f7a55b';
-  // ── Gallery: ดึงรูปจาก Google Maps API ──
-  const pid = p.img && PLACE_IDS[p.img.replace('IMGS.','')] || null;
-  
-  // แสดง loading ก่อน
+  // ── Gallery: เลื่อนรูปได้ ──
+  const imgs = IMGS[p.img] || [];
   const mw = document.getElementById('mimgwrap');
-  mw.innerHTML = `<div class="gal-loading">⏳ กำลังโหลดรูปภาพ...</div>
+  if (!imgs.length) {
+    mw.innerHTML = `<div style="width:100%;height:200px;background:#1a2234;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.3)">📷 ไม่มีรูปภาพ</div><div class="mimg-badge" style="background:${bc}22;color:${bc}">${p.badge}</div><button class="close-x" onclick="closeMdlBtn()">&#x2715;</button>`;
+    return;
+  }
+  let cur = 0;
+  const n = imgs.length;
+  function dots(){ return imgs.map((_,i)=>`<span class="gdot${i===cur?' on':''}" onclick="gTo(${i})"></span>`).join(''); }
+  mw.innerHTML = `
+    <div class="gal-frame" id="galFrame">
+      <div class="gal-slides" id="galSlides" style="width:${n*100}%">
+        ${imgs.map(u=>`<div style="flex-shrink:0;width:${100/n}%;height:200px"><img src="${u}" style="width:100%;height:200px;object-fit:cover;display:block" loading="lazy" onerror="this.parentNode.style.background='#1a2234'"></div>`).join('')}
+      </div>
+      ${n>1?`<button class="gal-prev" id="gPrev">&#8249;</button>
+      <button class="gal-next" id="gNext">&#8250;</button>
+      <div class="gal-dots">${dots()}</div>
+      <div class="gal-count" id="gCnt">1 / ${n}</div>`:''}
+    </div>
     <div class="mimg-badge" style="background:${bc}22;color:${bc}">${p.badge}</div>
     <button class="close-x" onclick="closeMdlBtn()">&#x2715;</button>`;
-
-  // ฟังก์ชัน render gallery จาก array of URLs
-  function renderGallery(urls) {
-    if (!urls || !urls.length) {
-      mw.innerHTML = `<div class="gal-loading">📷 ไม่พบรูปภาพ</div>
-        <div class="mimg-badge" style="background:${bc}22;color:${bc}">${p.badge}</div>
-        <button class="close-x" onclick="closeMdlBtn()">&#x2715;</button>`;
-      return;
-    }
-    let cur = 0;
-    const n = urls.length;
-    function dots() {
-      return urls.map((_,i) => `<span class="gdot${i===cur?' on':''}" onclick="gTo(${i})"></span>`).join('');
-    }
-    mw.innerHTML = `
-      <div class="gal-frame" id="galFrame">
-        <div class="gal-slides" id="galSlides">
-          ${urls.map(u=>`<div class="gal-slide"><img src="${u}" loading="lazy" onerror="this.parentNode.style.background='#1a2234'"></div>`).join('')}
-        </div>
-        ${n>1?`<button class="gal-prev" id="gPrev">&#8249;</button>
-        <button class="gal-next" id="gNext">&#8250;</button>
-        <div class="gal-dots" id="gDots">${dots()}</div>
-        <div class="gal-count" id="gCnt">1 / ${n}</div>`:''}
-      </div>
-      <div class="mimg-badge" style="background:${bc}22;color:${bc}">${p.badge}</div>
-      <button class="close-x" onclick="closeMdlBtn()">&#x2715;</button>`;
-
-    function go(i) {
-      cur = ((i % n) + n) % n;
-      const sl = document.getElementById('galSlides');
-      if (sl) sl.style.transform = `translateX(-${cur * 100}%)`;
-      document.querySelectorAll('.gdot').forEach((d,j) => d.classList.toggle('on', j===cur));
-      const cnt = document.getElementById('gCnt'); if(cnt) cnt.textContent = (cur+1)+' / '+n;
-      if(typeof sSlide === 'function') sSlide();
-    }
-    window.gTo = go;
-    const prev = document.getElementById('gPrev');
-    const next = document.getElementById('gNext');
-    if(prev) prev.onclick = () => go(cur-1);
-    if(next) next.onclick = () => go(cur+1);
-    // swipe
-    let tx = 0;
-    const frame = document.getElementById('galFrame');
-    if(frame){
-      frame.addEventListener('touchstart', e=>{tx=e.touches[0].clientX;},{passive:true});
-      frame.addEventListener('touchend', e=>{const d=tx-e.changedTouches[0].clientX;if(Math.abs(d)>40)go(cur+(d>0?1:-1));},{passive:true});
-    }
+  function go(i){
+    cur=((i%n)+n)%n;
+    const sl=document.getElementById('galSlides');
+    if(sl) sl.style.transform=`translateX(-${cur*(100/n)}%)`;
+    document.querySelectorAll('.gdot').forEach((d,j)=>d.classList.toggle('on',j===cur));
+    const c=document.getElementById('gCnt'); if(c) c.textContent=(cur+1)+' / '+n;
+    if(typeof sSlide==='function') sSlide();
   }
-
-  // ดึงรูปจาก API (place_id จริง)
-  if (pid) {
-    // เช็ค cache ก่อน
-    if (IMGS_CACHE[pid]) {
-      renderGallery(IMGS_CACHE[pid]);
-    } else {
-      fetch('/api/photos?place_id=' + encodeURIComponent(pid))
-        .then(r => r.json())
-        .then(data => {
-          const photos = data.photos || [];
-          IMGS_CACHE[pid] = photos;
-          renderGallery(photos);
-        })
-        .catch(() => renderGallery([]));
-    }
-  } else {
-    renderGallery([]);
+  window.gTo = go;
+  document.getElementById('gPrev') && (document.getElementById('gPrev').onclick=()=>go(cur-1));
+  document.getElementById('gNext') && (document.getElementById('gNext').onclick=()=>go(cur+1));
+  const fr=document.getElementById('galFrame');
+  if(fr){ let tx=0;
+    fr.addEventListener('touchstart',e=>{tx=e.touches[0].clientX;},{passive:true});
+    fr.addEventListener('touchend',e=>{const d=tx-e.changedTouches[0].clientX;if(Math.abs(d)>40)go(cur+(d>0?1:-1));},{passive:true});
   }
-
+  
   document.getElementById('mtabs').innerHTML=
     ['📋 ข้อมูล','🟢 Grab & รถ','⭐ รีวิว'].map((t,i)=>
       `<button class="mtab${i===0?' on':''}" onclick="swTab(${i},this)">${t}</button>`

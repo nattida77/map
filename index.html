@@ -63,8 +63,19 @@ html,body{height:100%;font-family:'IBM Plex Sans Thai','IBM Plex Sans',sans-seri
 @keyframes slideUp{from{transform:translateY(16px);opacity:0}to{transform:none;opacity:1}}
 
 /* Image */
-.mimg-wrap{position:relative;flex-shrink:0}
-.mimg{width:100%;height:175px;object-fit:cover;display:block;background:var(--bg3)}
+.mimg-wrap{position:relative;flex-shrink:0;background:var(--bg3);height:190px;overflow:hidden}
+.mimg{width:100%;height:190px;object-fit:cover;display:block;transition:opacity .25s}
+.gal-prev,.gal-next{position:absolute;top:50%;transform:translateY(-50%);
+  background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.2);
+  color:#fff;border-radius:50%;width:34px;height:34px;font-size:22px;line-height:1;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:5;
+  backdrop-filter:blur(4px);user-select:none}
+.gal-prev{left:8px}.gal-next{right:8px}
+.gal-dots{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);display:flex;gap:5px;z-index:5}
+.gdot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.4);cursor:pointer;transition:all .2s}
+.gdot.on{background:#fff;width:16px;border-radius:3px}
+.gal-count{position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,.5);
+  border-radius:20px;padding:2px 9px;font-size:10px;color:rgba(255,255,255,.85);z-index:5}
 .close-x{position:absolute;top:10px;right:10px;width:28px;height:28px;background:rgba(0,0,0,.45);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.15);border-radius:50%;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s}
 .close-x:hover{background:rgba(220,60,60,.7)}
 .mimg-badge{position:absolute;bottom:10px;left:10px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.1)}
@@ -211,6 +222,7 @@ function sOpen(){beep(440,.08,'sine',.12,700);setTimeout(()=>beep(700,.12,'sine'
 function sClose(){beep(500,.06,'sine',.1,340);}
 function sTab(){beep(600,.08,'sine',.08);}
 function sFilter(){beep(380,.06,'square',.06);}
+function sSlide(){beep(520,.05,'sine',.05);}
 
 // ─── COLOR MAP ───────────────────────────────────────────────
 const C={uni:'#5b8dee',dorm:'#f7a55b',condo:'#a78bfa',laundry:'#4ecdc4',shop:'#6ee7b7',hospital:'#f87171',bus:'#fcd34d'};
@@ -253,23 +265,23 @@ function grabHTML(distKm){
 
 // ─── DATA ────────────────────────────────────────────────────
 const IMGS={
-  a1:'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=420&q=70',
-  a2:'https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=420&q=70',
-  a3:'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=420&q=70',
-  a4:'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=420&q=70',
-  a5:'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=420&q=70',
-  a6:'https://images.unsplash.com/photo-1484154218962-a197022b5858?w=420&q=70',
-  a7:'https://images.unsplash.com/photo-1598928506311-c55ded91a20c?w=420&q=70',
-  a8:'https://images.unsplash.com/photo-1543489822-c49534f3271f?w=420&q=70',
-  a9:'https://images.unsplash.com/photo-1574362848149-11496d93a7c7?w=420&q=70',
-  a10:'https://images.unsplash.com/photo-1536376072261-38c75010e6c9?w=420&q=70',
-  c1:'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=420&q=70',
-  c2:'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=420&q=70',
-  lau:'https://images.unsplash.com/photo-1582735689369-4fe89db7114c?w=420&q=70',
-  sh:'https://images.unsplash.com/photo-1604719312566-8912e9667d9f?w=420&q=70',
-  hos:'https://images.unsplash.com/photo-1538108149393-fbbd81895907?w=420&q=70',
-  bus:'https://images.unsplash.com/photo-1570125909232-eb263c188f7e?w=420&q=70',
-  uni:'https://images.unsplash.com/photo-1562774053-701939374585?w=420&q=70'
+  uni:['https://images.unsplash.com/photo-1562774053-701939374585?w=700&q=80','https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=700&q=80','https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=700&q=80','https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=700&q=80','https://images.unsplash.com/photo-1498243691581-b145c3f54a5a?w=700&q=80'],
+  a1:['https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=700&q=80','https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=700&q=80','https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=700&q=80','https://images.unsplash.com/photo-1484154218962-a197022b5858?w=700&q=80','https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=700&q=80'],
+  a2:['https://images.unsplash.com/photo-1574362848149-11496d93a7c7?w=700&q=80','https://images.unsplash.com/photo-1536376072261-38c75010e6c9?w=700&q=80','https://images.unsplash.com/photo-1630699144867-37acec97df5a?w=700&q=80','https://images.unsplash.com/photo-1615873968403-89e068629265?w=700&q=80','https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=700&q=80'],
+  a3:['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=700&q=80','https://images.unsplash.com/photo-1507089947368-19c1da9775ae?w=700&q=80','https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=700&q=80','https://images.unsplash.com/photo-1564078516393-cf04bd966897?w=700&q=80','https://images.unsplash.com/photo-1598928506311-c55ded91a20c?w=700&q=80'],
+  c1:['https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=700&q=80','https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=700&q=80','https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=700&q=80','https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=700&q=80','https://images.unsplash.com/photo-1600566752355-35792bedcfea?w=700&q=80'],
+  a4:['https://images.unsplash.com/photo-1543489822-c49534f3271f?w=700&q=80','https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=700&q=80','https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=700&q=80','https://images.unsplash.com/photo-1484154218962-a197022b5858?w=700&q=80','https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=700&q=80'],
+  a5:['https://dynamic-media-cdn.tripadvisor.com/media/photo-o/07/a0/79/83/rangsee-place.jpg?w=700&h=500&s=1','https://dynamic-media-cdn.tripadvisor.com/media/photo-o/07/a0/79/bf/rangsee-place.jpg?w=700&h=500&s=1','https://dynamic-media-cdn.tripadvisor.com/media/photo-o/07/a0/78/ce/rangsee-place.jpg?w=700&h=500&s=1','https://dynamic-media-cdn.tripadvisor.com/media/photo-o/07/a0/76/6d/rangsee-place.jpg?w=700&h=500&s=1','https://dynamic-media-cdn.tripadvisor.com/media/photo-o/07/a0/79/2b/rangsee-place.jpg?w=700&h=500&s=1'],
+  a6:['https://images.unsplash.com/photo-1484154218962-a197022b5858?w=700&q=80','https://images.unsplash.com/photo-1598928506311-c55ded91a20c?w=700&q=80','https://images.unsplash.com/photo-1543489822-c49534f3271f?w=700&q=80','https://images.unsplash.com/photo-1615873968403-89e068629265?w=700&q=80','https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=700&q=80'],
+  a7:['https://images.unsplash.com/photo-1507089947368-19c1da9775ae?w=700&q=80','https://images.unsplash.com/photo-1564078516393-cf04bd966897?w=700&q=80','https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=700&q=80','https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=700&q=80','https://images.unsplash.com/photo-1630699144867-37acec97df5a?w=700&q=80'],
+  a8:['https://images.unsplash.com/photo-1536376072261-38c75010e6c9?w=700&q=80','https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=700&q=80','https://images.unsplash.com/photo-1574362848149-11496d93a7c7?w=700&q=80','https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=700&q=80','https://images.unsplash.com/photo-1484154218962-a197022b5858?w=700&q=80'],
+  a9:['https://images.unsplash.com/photo-1598928506311-c55ded91a20c?w=700&q=80','https://images.unsplash.com/photo-1543489822-c49534f3271f?w=700&q=80','https://images.unsplash.com/photo-1615873968403-89e068629265?w=700&q=80','https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=700&q=80','https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=700&q=80'],
+  a10:['https://images.unsplash.com/photo-1507089947368-19c1da9775ae?w=700&q=80','https://images.unsplash.com/photo-1536376072261-38c75010e6c9?w=700&q=80','https://images.unsplash.com/photo-1630699144867-37acec97df5a?w=700&q=80','https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=700&q=80','https://images.unsplash.com/photo-1574362848149-11496d93a7c7?w=700&q=80'],
+  c2:['https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=700&q=80','https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=700&q=80','https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=700&q=80','https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=700&q=80','https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=700&q=80'],
+  lau:['https://images.unsplash.com/photo-1582735689369-4fe89db7114c?w=700&q=80','https://images.unsplash.com/photo-1585421514284-efb74c2b69ba?w=700&q=80','https://images.unsplash.com/photo-1626806787461-102c1bfaaea1?w=700&q=80','https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=700&q=80','https://images.unsplash.com/photo-1545173168-9f1947eebb7f?w=700&q=80'],
+  sh:['https://images.unsplash.com/photo-1604719312566-8912e9667d9f?w=700&q=80','https://images.unsplash.com/photo-1534723328310-e82dad3ee43f?w=700&q=80','https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?w=700&q=80','https://images.unsplash.com/photo-1568254183919-78a4f43a2877?w=700&q=80','https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=700&q=80'],
+  hos:['https://images.unsplash.com/photo-1538108149393-fbbd81895907?w=700&q=80','https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=700&q=80','https://images.unsplash.com/photo-1581595220892-b0739db3ba8c?w=700&q=80','https://images.unsplash.com/photo-1516574187841-cb9cc2ca948b?w=700&q=80','https://images.unsplash.com/photo-1551190822-a9333d879b1f?w=700&q=80'],
+  bus:['https://images.unsplash.com/photo-1570125909232-eb263c188f7e?w=700&q=80','https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=700&q=80','https://images.unsplash.com/photo-1464219789935-c2d9d9aba644?w=700&q=80','https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=700&q=80','https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=700&q=80']
 };
 
 const DATA=[
@@ -653,10 +665,31 @@ function togRad(){
 // ─── MODAL ───────────────────────────────────────────────────
 function openMdl(p){
   const bc=p.bc||'#f7a55b';
-  document.getElementById('mimgwrap').innerHTML=
-    `<img class="mimg" src="${p.img}" alt="${p.name}" onerror="this.parentNode.style.background='var(--bg3)';this.style.display='none'" loading="lazy">
-     <div class="mimg-badge" style="background:${bc}22;color:${bc}">${p.badge}</div>
-     <button class="close-x" onclick="closeMdlBtn()">✕</button>`;
+  // ── Gallery ──
+  const _imgs = Array.isArray(p.img) ? p.img : [p.img];
+  let _cur = 0;
+  function _mk(){
+    const dots = _imgs.map((_,i)=>`<span class="gdot${i===_cur?' on':''}" onclick="gSlide(${i})"></span>`).join('');
+    return `<img class="mimg" id="gImg" src="${_imgs[_cur]}" onerror="this.style.opacity='0.2'" loading="eager">
+      <button class="gal-prev" onclick="gSlide(_cur-1)">&#8249;</button>
+      <button class="gal-next" onclick="gSlide(_cur+1)">&#8250;</button>
+      <div class="gal-dots">${dots}</div>
+      <div class="gal-count" id="gCnt">${_cur+1} / ${_imgs.length}</div>
+      <div class="mimg-badge" style="background:${bc}22;color:${bc}">${p.badge}</div>
+      <button class="close-x" onclick="closeMdlBtn()">&#x2715;</button>`;
+  }
+  document.getElementById('mimgwrap').innerHTML = _mk();
+  window.gSlide = function(n){
+    _cur = ((n % _imgs.length) + _imgs.length) % _imgs.length;
+    const el = document.getElementById('gImg');
+    if(el){ el.style.opacity='0'; el.src=_imgs[_cur]; el.onload=()=>el.style.opacity='1'; }
+    document.querySelectorAll('.gdot').forEach((d,i)=>d.classList.toggle('on',i===_cur));
+    const c=document.getElementById('gCnt'); if(c)c.textContent=(_cur+1)+' / '+_imgs.length;
+    if(typeof sSlide==='function') sSlide();
+  };
+  const _mw=document.getElementById('mimgwrap');
+  _mw.addEventListener('touchstart',e=>{window._tx=e.touches[0].clientX;},{passive:true});
+  _mw.addEventListener('touchend',e=>{const d=(window._tx||0)-e.changedTouches[0].clientX;if(Math.abs(d)>40)gSlide(_cur+(d>0?1:-1));},{passive:true});
 
   document.getElementById('mtabs').innerHTML=
     ['📋 ข้อมูล','🟢 Grab & รถ','⭐ รีวิว'].map((t,i)=>
@@ -732,3 +765,12 @@ function closeMdlOv(e){if(e.target===document.getElementById('mover'))closeMdlBt
 </script>
 </body>
 </html>
+{
+  "version": 2,
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
+}

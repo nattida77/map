@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>แผนที่หอพัก มทร.รัตนโกสินทร์ ศาลายา</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg1:#1c2233;--bg2:#232b3e;--bg3:#2a3450;
+  --acc:#5b8dee;--acc2:#4ecdc4;--acc3:#f7c59f;
+  --text1:#e8edf5;--text2:#9aa8c0;--text3:#5a6680;
+  --border:rgba(255,255,255,.07);
+  --card:rgba(255,255,255,.04);
+  --radius:12px;
+}
+html,body{height:100%;font-family:'IBM Plex Sans Thai','IBM Plex Sans',sans-serif;background:var(--bg1);color:var(--text1);overflow:hidden}
+#app{display:flex;flex-direction:column;height:100vh}
+
+/* ── Header ── */
+#hdr{background:var(--bg1);padding:12px 18px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);flex-shrink:0}
+.logo{width:36px;height:36px;background:var(--acc);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;box-shadow:0 2px 12px rgba(91,141,238,.3)}
+#hdr h1{font-size:14px;font-weight:600;color:var(--text1);letter-spacing:.01em}
+#hdr p{font-size:11px;color:var(--text3);margin-top:1px}
+.hstats{margin-left:auto;display:flex;gap:7px}
+.spill{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:4px 11px;font-size:11px;color:var(--text2);white-space:nowrap}
+
+/* ── Filter bar ── */
+#fbar{background:var(--bg1);padding:8px 18px;display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--border);flex-shrink:0}
+.fb{padding:5px 13px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text3);font-size:11px;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .18s}
+.fb:hover{border-color:rgba(255,255,255,.18);color:var(--text2)}
+.fb.on{color:#fff}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+
+/* ── Map ── */
+#mwrap{position:relative;flex:1}
+#map{width:100%;height:100%}
+.leaflet-container{font-family:inherit!important}
+.leaflet-control-zoom a{background:var(--bg2)!important;color:var(--text2)!important;border-color:var(--border)!important}
+.leaflet-control-zoom a:hover{background:var(--bg3)!important;color:var(--text1)!important}
+
+/* ── Legend ── */
+#lgd{position:absolute;bottom:24px;left:12px;background:rgba(28,34,51,.92);backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:var(--radius);padding:9px 13px;z-index:900}
+#lgd h4{font-size:9px;color:var(--text3);letter-spacing:.7px;text-transform:uppercase;margin-bottom:7px}
+.li{display:flex;align-items:center;gap:7px;margin-bottom:5px;font-size:11px;color:var(--text2)}
+.li:last-child{margin-bottom:0}
+.ldot{width:9px;height:9px;border-radius:50%}
+.lsq{width:10px;height:10px;border-radius:3px}
+
+/* ── Radius ── */
+#rbtn{position:absolute;bottom:24px;right:52px;background:rgba(28,34,51,.92);backdrop-filter:blur(10px);border:1px solid var(--border);color:var(--text2);border-radius:8px;padding:6px 11px;font-size:11px;font-family:inherit;cursor:pointer;z-index:900;transition:all .18s}
+#rbtn:hover,#rbtn.on{background:rgba(91,141,238,.15);border-color:var(--acc);color:var(--text1)}
+
+/* ── MODAL overlay ── */
+#mover{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+#mover.open{display:flex;animation:fadeIn .18s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+/* ── Modal box ── */
+#mdl{background:var(--bg2);border-radius:18px;width:420px;max-width:95vw;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.5);border:1px solid var(--border);animation:slideUp .2s ease}
+@keyframes slideUp{from{transform:translateY(16px);opacity:0}to{transform:none;opacity:1}}
+
+/* Image */
+.mimg-wrap{position:relative;flex-shrink:0}
+.mimg{width:100%;height:175px;object-fit:cover;display:block;background:var(--bg3)}
+.close-x{position:absolute;top:10px;right:10px;width:28px;height:28px;background:rgba(0,0,0,.45);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.15);border-radius:50%;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.close-x:hover{background:rgba(220,60,60,.7)}
+.mimg-badge{position:absolute;bottom:10px;left:10px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.1)}
+
+/* Tabs */
+.mtabs{display:flex;background:var(--bg1);border-bottom:1px solid var(--border);flex-shrink:0}
+.mtab{flex:1;padding:9px 0;font-size:11px;font-family:inherit;background:transparent;border:none;color:var(--text3);cursor:pointer;transition:all .15s;border-bottom:2px solid transparent;margin-bottom:-1px}
+.mtab.on{color:var(--acc);border-bottom-color:var(--acc)}
+.mtab:hover:not(.on){color:var(--text2)}
+
+/* Body */
+.mbody{overflow-y:auto;flex:1;padding:14px 16px}
+.mbody::-webkit-scrollbar{width:3px}
+.mbody::-webkit-scrollbar-thumb{background:var(--text3);border-radius:3px}
+
+/* Info */
+.mname{font-size:16px;font-weight:600;color:var(--text1);margin-bottom:3px}
+.maddr{font-size:11px;color:var(--text3);margin-bottom:8px;line-height:1.5}
+.mrating{display:flex;align-items:center;gap:6px;font-size:12px;margin-bottom:12px}
+.stars{color:#f5c842;font-weight:700}
+.rcnt{color:var(--text3)}
+
+/* Stat grid */
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:11px}
+.scard{background:var(--card);border:1px solid var(--border);border-radius:9px;padding:9px 11px}
+.slbl{font-size:9px;color:var(--text3);margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px}
+.sval{font-size:13px;font-weight:600;color:var(--text1);line-height:1.2}
+.ssub{font-size:10px;color:var(--text3)}
+
+/* Rows */
+.irow{display:flex;align-items:flex-start;gap:8px;font-size:11px;color:var(--text2);padding:5px 0;border-bottom:1px solid var(--border)}
+.irow:last-child{border:none}
+.ilbl{color:var(--text3);min-width:72px;flex-shrink:0}
+.ival{color:var(--text2);line-height:1.4}
+
+/* Tags */
+.tags{display:flex;flex-wrap:wrap;gap:4px;margin:7px 0}
+.tag{border-radius:20px;padding:3px 8px;font-size:10px;background:var(--card);border:1px solid var(--border);color:var(--text2)}
+.sec-lbl{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;margin-top:11px}
+.sec-lbl:first-child{margin-top:0}
+
+/* Grab box */
+.grab-box{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:11px 13px;margin-bottom:10px}
+.grab-head{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+.grab-logo{width:28px;height:28px;background:#00b14f;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.grab-title{font-size:12px;font-weight:600;color:var(--text1)}
+.grab-sub{font-size:10px;color:var(--text3)}
+.grab-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)}
+.grab-row:last-child{border:none}
+.grab-type{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text2)}
+.grab-icon{font-size:16px}
+.grab-price{font-size:13px;font-weight:700;color:var(--acc)}
+.grab-note{font-size:10px;color:var(--text3)}
+
+/* Bus */
+.busitem{display:flex;align-items:flex-start;gap:9px;padding:8px 10px;background:var(--card);border:1px solid var(--border);border-radius:9px;margin-bottom:6px}
+.busnum{border-radius:6px;padding:3px 8px;font-size:11px;font-weight:700;min-width:44px;text-align:center;flex-shrink:0;margin-top:1px}
+.busroute{font-size:11px;color:var(--text2);line-height:1.4}
+.busfreq{font-size:10px;color:var(--text3);margin-top:2px}
+
+/* Reviews */
+.revcard{background:var(--card);border:1px solid var(--border);border-radius:9px;padding:10px 11px;margin-bottom:7px}
+.revhead{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.avt{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.rvname{font-size:11px;font-weight:600;color:var(--text1)}
+.rvdate{font-size:10px;color:var(--text3)}
+.rvstars{font-size:11px;color:#f5c842;margin-bottom:3px}
+.rvtext{font-size:11px;color:var(--text2);line-height:1.6}
+
+/* Tab panels */
+.tpanel{display:none}.tpanel.on{display:block}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="hdr">
+    <div class="logo">🎓</div>
+    <div>
+      <h1>มทร.รัตนโกสินทร์ ศาลายา — แผนที่หอพัก</h1>
+      <p>อ.พุทธมณฑล · คลิก PIN เพื่อดูรายละเอียด รีวิว ราคา Grab และการเดินทาง</p>
+    </div>
+    <div class="hstats">
+      <span class="spill">🏠 19 ที่พัก</span>
+      <span class="spill">🚌 6 สายรถ</span>
+      <span class="spill">🟢 Grab ราคา</span>
+    </div>
+  </div>
+
+  <div id="fbar">
+    <button class="fb on" style="background:var(--acc);border-color:var(--acc)" onclick="setF('all',this)"><span class="dot" style="background:#fff"></span>ทั้งหมด</button>
+    <button class="fb" onclick="setF('dorm',this)"><span class="dot" style="background:#f7a55b"></span>หอพัก/อพาร์ทเม้นท์</button>
+    <button class="fb" onclick="setF('condo',this)"><span class="dot" style="background:#a78bfa"></span>คอนโด</button>
+    <button class="fb" onclick="setF('laundry',this)"><span class="dot" style="background:#4ecdc4"></span>ร้านซักรีด</button>
+    <button class="fb" onclick="setF('shop',this)"><span class="dot" style="background:#6ee7b7"></span>ร้านค้า/ห้าง</button>
+    <button class="fb" onclick="setF('hospital',this)"><span class="dot" style="background:#f87171"></span>โรงพยาบาล</button>
+    <button class="fb" onclick="setF('bus',this)"><span class="dot" style="background:#fcd34d"></span>ป้ายรถ/วิน</button>
+  </div>
+
+  <div id="mwrap">
+    <div id="map"></div>
+    <div id="lgd">
+      <h4>สัญลักษณ์</h4>
+      <div class="li"><div class="lsq" style="background:#5b8dee"></div>มหาวิทยาลัย</div>
+      <div class="li"><div class="ldot" style="background:#f7a55b"></div>หอพัก/อพาร์ทเม้นท์</div>
+      <div class="li"><div class="ldot" style="background:#a78bfa"></div>คอนโด</div>
+      <div class="li"><div class="ldot" style="background:#4ecdc4"></div>ร้านซักรีด</div>
+      <div class="li"><div class="ldot" style="background:#6ee7b7"></div>ร้านค้า/ห้าง</div>
+      <div class="li"><div class="ldot" style="background:#f87171"></div>โรงพยาบาล</div>
+      <div class="li"><div class="ldot" style="background:#fcd34d"></div>ป้ายรถ/วิน</div>
+    </div>
+    <button id="rbtn" onclick="togRad()">📏 รัศมี 1 กม.</button>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div id="mover" onclick="closeMdlOv(event)">
+  <div id="mdl">
+    <div class="mimg-wrap" id="mimgwrap"></div>
+    <div class="mtabs" id="mtabs"></div>
+    <div class="mbody" id="mbody"></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+// ─── SOUND (Web Audio API — ต้องเรียกหลัง user gesture) ────
+let _ac=null;
+function getAC(){if(!_ac)_ac=new(window.AudioContext||window.webkitAudioContext)();return _ac;}
+function beep(freq,dur,type='sine',vol=0.15,freqEnd){
+  try{
+    const ac=getAC();
+    if(ac.state==='suspended') ac.resume();
+    const o=ac.createOscillator(), g=ac.createGain();
+    o.connect(g);g.connect(ac.destination);
+    o.type=type;
+    o.frequency.setValueAtTime(freq,ac.currentTime);
+    if(freqEnd) o.frequency.exponentialRampToValueAtTime(freqEnd,ac.currentTime+dur);
+    g.gain.setValueAtTime(vol,ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001,ac.currentTime+dur);
+    o.start(ac.currentTime);o.stop(ac.currentTime+dur+0.02);
+  }catch(e){console.log('sound err',e);}
+}
+function sOpen(){beep(440,.08,'sine',.12,700);setTimeout(()=>beep(700,.12,'sine',.08),90);}
+function sClose(){beep(500,.06,'sine',.1,340);}
+function sTab(){beep(600,.08,'sine',.08);}
+function sFilter(){beep(380,.06,'square',.06);}
+
+// ─── COLOR MAP ───────────────────────────────────────────────
+const C={uni:'#5b8dee',dorm:'#f7a55b',condo:'#a78bfa',laundry:'#4ecdc4',shop:'#6ee7b7',hospital:'#f87171',bus:'#fcd34d'};
+const ULT=13.7959,ULG=100.3005;
+
+// ─── GRAB PRICE CALCULATOR ───────────────────────────────────
+// Base rates (THB): moto 20+8/km, car 40+12/km (approx Grab Thailand 2024)
+function grabPrice(distKm){
+  const moto=Math.round(20+8*distKm);
+  const car=Math.round(45+14*distKm);
+  return {
+    moto:{min:Math.max(20,moto-5),max:moto+8},
+    car:{min:Math.max(45,car-10),max:car+15}
+  };
+}
+function grabHTML(distKm){
+  if(!distKm||distKm<=0) return '';
+  const g=grabPrice(distKm);
+  return `
+  <div class="sec-lbl">🟢 ราคา Grab โดยประมาณ</div>
+  <div class="grab-box">
+    <div class="grab-head">
+      <div class="grab-logo">G</div>
+      <div><div class="grab-title">Grab จากมหาวิทยาลัย</div>
+      <div class="grab-sub">ระยะทาง ~${distKm} กม. · ราคาขึ้นอยู่กับช่วงเวลา</div></div>
+    </div>
+    <div class="grab-row">
+      <div class="grab-type"><span class="grab-icon">🛵</span><span>Grab Bike (มอเตอร์ไซค์)</span></div>
+      <div style="text-align:right"><div class="grab-price">${g.moto.min}–${g.moto.max} บาท</div><div class="grab-note">~${Math.round(distKm/0.3)} นาที</div></div>
+    </div>
+    <div class="grab-row">
+      <div class="grab-type"><span class="grab-icon">🚗</span><span>GrabCar (รถยนต์)</span></div>
+      <div style="text-align:right"><div class="grab-price">${g.car.min}–${g.car.max} บาท</div><div class="grab-note">~${Math.round(distKm/0.5)} นาที</div></div>
+    </div>
+    <div class="grab-row" style="border:none;padding-top:6px">
+      <div style="font-size:10px;color:var(--text3)">⚠️ ราคาอาจเปลี่ยนแปลงตาม surge pricing ในชั่วโมงเร่งด่วน</div>
+    </div>
+  </div>`;
+}
+
+// ─── DATA ────────────────────────────────────────────────────
+const IMGS={
+  a1:'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=420&q=70',
+  a2:'https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=420&q=70',
+  a3:'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=420&q=70',
+  a4:'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=420&q=70',
+  a5:'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=420&q=70',
+  a6:'https://images.unsplash.com/photo-1484154218962-a197022b5858?w=420&q=70',
+  a7:'https://images.unsplash.com/photo-1598928506311-c55ded91a20c?w=420&q=70',
+  a8:'https://images.unsplash.com/photo-1543489822-c49534f3271f?w=420&q=70',
+  a9:'https://images.unsplash.com/photo-1574362848149-11496d93a7c7?w=420&q=70',
+  a10:'https://images.unsplash.com/photo-1536376072261-38c75010e6c9?w=420&q=70',
+  c1:'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=420&q=70',
+  c2:'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=420&q=70',
+  lau:'https://images.unsplash.com/photo-1582735689369-4fe89db7114c?w=420&q=70',
+  sh:'https://images.unsplash.com/photo-1604719312566-8912e9667d9f?w=420&q=70',
+  hos:'https://images.unsplash.com/photo-1538108149393-fbbd81895907?w=420&q=70',
+  bus:'https://images.unsplash.com/photo-1570125909232-eb263c188f7e?w=420&q=70',
+  uni:'https://images.unsplash.com/photo-1562774053-701939374585?w=420&q=70'
+};
+
+const DATA=[
+{id:'uni',lat:13.7959,lng:100.3005,type:'uni',emoji:'🎓',name:'มทร.รัตนโกสินทร์ ศาลายา',
+ addr:'96 หมู่ 3 ถ.พุทธมณฑล สาย 5 ต.ศาลายา',img:IMGS.uni,bc:'#5b8dee',badge:'🎓 มหาวิทยาลัย',
+ distKm:0,price:null,dist:null,elec:null,water:null,phone:'02-441-6000',rating:'4.5',reviews:'237',
+ amenities:['เปิด จ–ศ 08:30–16:30','ห้องสมุด','ลานกีฬา','โรงอาหาร','สหกรณ์'],nearby:[],
+ transport:[
+  {num:'515',col:'#f87171',text:'อนุเสาวรีย์ชัย ↔ เซ็นทรัลศาลายา',freq:'ทุก 15-20 นาที'},
+  {num:'547',col:'#93c5fd',text:'สีลม ↔ มทร.รัตนโกสินทร์',freq:'ทุก 20-25 นาที'},
+  {num:'124',col:'#6ee7b7',text:'สนามหลวง ↔ มทร.',freq:'ทุก 25-30 นาที'},
+  {num:'125',col:'#fdba74',text:'อนุเสาวรีย์ ↔ มทร.',freq:'ทุก 20-25 นาที'},
+  {num:'วิน🛵',col:'#fcd34d',text:'วินมอเตอร์ไซค์หน้าประตูมหาลัย',freq:'06:00–22:00 น.'}
+ ],
+ rv:[{n:'สมหญิง ก.',c:'#f7a55b',s:5,d:'มี.ค. 68',t:'บรรยากาศดีมาก อาจารย์ใจดี โรงอาหารอร่อย ราคาถูก'},
+     {n:'ธีรพงศ์ ว.',c:'#5b8dee',s:4,d:'ก.พ. 68',t:'ห้องเรียนสะอาด WiFi ทั่วมหาลัย ที่จอดรถเพียงพอ'},
+     {n:'พิมพ์ชนก ร.',c:'#6ee7b7',s:5,d:'ม.ค. 68',t:'ชอบสนามฟุตบอล นักศึกษารุ่นพี่ใจดีมาก'},
+     {n:'กฤษณะ ล.',c:'#a78bfa',s:4,d:'ธ.ค. 67',t:'มีร้านสะดวกซื้อในมหาลัย ช่วงสอบมีที่นั่งอ่านหนังสือ'},
+     {n:'นภัสสร ท.',c:'#f87171',s:5,d:'พ.ย. 67',t:'มหาลัยสวย ต้นไม้เยอะ ร่มรื่น เจ้าหน้าที่บริการดี'}]},
+
+{id:'udee',lat:13.7950,lng:100.3020,type:'dorm',emoji:'🏠',name:'Udee House',
+ addr:'ถ.พุทธมณฑล สาย 5 ติดมหาวิทยาลัย',img:IMGS.a1,bc:'#f7a55b',badge:'🏠 อพาร์ทเม้นท์',
+ distKm:0.3,price:'3,900',dist:'~310 ม.',elec:'8 บาท/หน่วย',water:'18 บาท/หน่วย',phone:'094-928-3695',rating:'4.8',reviews:'218',
+ amenities:['WiFi ฟรี','แอร์','ตู้เย็น','TV','Key card','CCTV','ที่จอดรถ','สวนหย่อม','ห้องอ่านหนังสือ'],
+ nearby:['7-Eleven หน้าหอ','ร้านกาแฟ','ร้านอาหาร'],
+ transport:[
+  {num:'515',col:'#f87171',text:'อนุเสาวรีย์ชัย ↔ เซ็นทรัลศาลายา',freq:'ทุก 15-20 นาที'},
+  {num:'วิน🛵',col:'#fcd34d',text:'วินมอเตอร์ไซค์หน้ามหาลัย',freq:'06:00–22:00 น. ~20 บาท'}],
+ rv:[{n:'ปาริฉัตร ส.',c:'#f7a55b',s:5,d:'เม.ย. 68',t:'ใกล้มหาลัยมากที่สุด เดิน 5 นาทีถึงเลย สะอาดมาก แม่บ้านขยัน'},
+     {n:'วรากร ม.',c:'#5b8dee',s:5,d:'มี.ค. 68',t:'Key card ปลอดภัย CCTV ครบ สวนหย่อมสวยน่านั่งอ่านหนังสือ'},
+     {n:'สุนิสา พ.',c:'#6ee7b7',s:4,d:'ก.พ. 68',t:'ห้องกว้าง ตู้เย็นใหม่ WiFi แรงดี ค่าไฟแพงนิดตอนใช้แอร์เยอะ'},
+     {n:'ณัฐวุฒิ ข.',c:'#a78bfa',s:5,d:'ม.ค. 68',t:'เจ้าของใจดี แก้ปัญหาไว มี 7-11 หน้าหอสะดวกมาก'},
+     {n:'ภัทราวดี ว.',c:'#f87171',s:4,d:'ธ.ค. 67',t:'ชั้น 1 มีร้านกาแฟ บรรยากาศดี เพื่อนบ้านไม่มีเสียงดัง'}]},
+
+{id:'p5',lat:13.7820,lng:100.2970,type:'dorm',emoji:'🏘',name:'P5 Mansion',
+ addr:'149 ซ.บางกระทึก 11 ถ.พุทธมณฑลสาย 5 สามพราน',img:IMGS.a2,bc:'#f7a55b',badge:'🏠 อพาร์ทเม้นท์',
+ distKm:1.5,price:'2,400',dist:'~1.5 กม.',elec:'สอบถาม',water:'สอบถาม',phone:'LINE: maew_p5',rating:'4.0',reviews:'89',
+ amenities:['WiFi ฟรี','แอร์ Daikin เบอร์ 5','เตียง 5 ฟุต','รปภ.24ชม.','ที่จอดรถ 350 คัน','CCTV','23 ตร.ม.'],
+ nearby:['7-Eleven','ร้านขายยา','ร้านทำผม','ซักอบรีด'],
+ transport:[
+  {num:'539',col:'#fdba74',text:'อ้อมน้อย → อนุเสาวรีย์ชัย ผ่านหน้าซอย',freq:'ทุก 20-30 นาที'},
+  {num:'วิน🛵',col:'#fcd34d',text:'วินปากซอยบางกระทึก',freq:'07:00–21:00 น. ~25 บาท'}],
+ rv:[{n:'มานิตา ช.',c:'#f7a55b',s:5,d:'เม.ย. 68',t:'ราคาถูกที่สุดในย่าน 2,400 บาท ห้อง 23 ตร.ม. คุ้มสุดๆ'},
+     {n:'พิชัย ต.',c:'#5b8dee',s:4,d:'มี.ค. 68',t:'ที่จอดรถ 350 คัน! รถเมล์ผ่านหน้าซอย ไปอนุสาวรีย์ได้เลย'},
+     {n:'กัญญาพัชร น.',c:'#6ee7b7',s:4,d:'ก.พ. 68',t:'แอร์ Daikin เย็นดีประหยัดไฟ ห้องน้ำสะอาด ตอบไลน์ไว'},
+     {n:'อนุชา ป.',c:'#a78bfa',s:3,d:'ม.ค. 68',t:'ไกลมหาลัยหน่อย แต่มีวินมอเตอร์ไซค์ ราคาถูกคุ้มมาก'},
+     {n:'ปริญญา ห.',c:'#f87171',s:5,d:'ธ.ค. 67',t:'7-11 หน้าหอ ร้านยาใกล้ บรรยากาศเงียบสงบ น่าอยู่มาก'}]},
+
+{id:'lunlana',lat:13.8010,lng:100.3070,type:'dorm',emoji:'🏨',name:'Lunlana Palace',
+ addr:'47/888 ซ.สหพร 27 ถ.ศาลายา-นครชัยศรี',img:IMGS.a3,bc:'#f7a55b',badge:'🏠 หอพัก',
+ distKm:1.5,price:'3,700–4,000',dist:'~1.5 กม.',elec:'สอบถาม',water:'สอบถาม',phone:'092-532-7000',rating:'4.3',reviews:'62',
+ amenities:['WiFi','แอร์','ตู้เย็น','TV LED 29"','ดาวเทียม 400ช่อง','สแกนนิ้ว 2 ชั้น','เครื่องซักผ้า','CCTV 16 จุด','เลี้ยงสัตว์ได้'],
+ nearby:['Mini-mart ปากซอย','ร้านอาหาร'],
+ transport:[
+  {num:'515',col:'#f87171',text:'ผ่านถ.ศาลายา-นครชัยศรี ปากซอย',freq:'ทุก 15-20 นาที'},
+  {num:'547',col:'#93c5fd',text:'สีลม → มทร.รัตนโกสินทร์ ศาลายา',freq:'ทุก 20-25 นาที'},
+  {num:'วิน🛵',col:'#fcd34d',text:'วินมอเตอร์ไซค์ซ.สหพร',freq:'06:30–21:00 น. ~20 บาท'}],
+ rv:[{n:'ธันยพร อ.',c:'#f7a55b',s:5,d:'เม.ย. 68',t:'เฟอร์นิเจอร์ไม้สักสวยงาม ระบบล็อคประตู 3 ชั้น ปลอดภัยสุดๆ'},
+     {n:'วิชัย ส.',c:'#5b8dee',s:4,d:'มี.ค. 68',t:'เลี้ยงแมวได้! หาหอพักเลี้ยงสัตว์ได้ยากมากในย่านนี้'},
+     {n:'นลินี ป.',c:'#6ee7b7',s:5,d:'ก.พ. 68',t:'ดาวเทียม 400 ช่อง WiFi แรงดี มีเครื่องซักผ้าในอาคาร'},
+     {n:'กมล ร.',c:'#a78bfa',s:4,d:'ม.ค. 68',t:'รถเมล์ 2 สายผ่าน มีวินมอเตอร์ไซค์หน้าซอย ราคาเหมาะสม'},
+     {n:'สุวิมล ก.',c:'#f87171',s:4,d:'ธ.ค. 67',t:'ห้องกว้าง เพดานสูง อากาศดี บรรยากาศเหมือนบ้าน'}]},
+
+{id:'enter',lat:13.8025,lng:100.3055,type:'condo',emoji:'🏢',name:'The Enter Salaya',
+ addr:'99/58-59 ถ.ศาลายา-นครชัยศรี ต.ศาลายา',img:IMGS.c1,bc:'#a78bfa',badge:'🏢 คอนโด',
+ distKm:1.7,price:'6,200–12,500',dist:'~1.7 กม.',elec:'สอบถาม',water:'สอบถาม',phone:'สอบถาม',rating:'4.2',reviews:'156',
+ amenities:['TV LED 32"','ตู้เย็น Haier 6.5คิว','แอร์','Internet True','ระเบียงส่วนตัว','Key card','ลิฟท์','Fitness','6 ชั้น 30-50 ตร.ม.'],
+ nearby:['รพ.ศาลายา 1.1กม.','Makro','Lotus'],
+ transport:[
+  {num:'515',col:'#f87171',text:'ผ่านหน้าอาคาร ถ.ศาลายา-นครชัยศรี',freq:'ทุก 15-20 นาที'},
+  {num:'547',col:'#93c5fd',text:'สีลม → มทร.รัตนโกสินทร์',freq:'ทุก 20-25 นาที'},
+  {num:'วิน🛵',col:'#fcd34d',text:'วินมอเตอร์ไซค์หน้าอาคาร',freq:'ตลอดวัน ~25 บาท'}],
+ rv:[{n:'ณัฐณิชา ว.',c:'#a78bfa',s:5,d:'เม.ย. 68',t:'ห้องสไตล์โมเดิร์น ระเบียงส่วนตัวทุกห้อง วิวสวย ลิฟท์สะดวก'},
+     {n:'ธนาวิน ก.',c:'#5b8dee',s:4,d:'มี.ค. 68',t:'ติดถนนใหญ่ รถเมล์ผ่านตลอด Fitness ใช้ได้ 24 ชม.'},
+     {n:'พิชาภรณ์ ส.',c:'#6ee7b7',s:5,d:'ก.พ. 68',t:'Internet True ความเร็วสูง ใช้ทำงานออนไลน์ได้สบาย'},
+     {n:'สุรพล ม.',c:'#f7a55b',s:4,d:'ม.ค. 68',t:'ราคาสูงหน่อยแต่คุณภาพดี เจ้าหน้าที่ตอบสนองไว'},
+     {n:'กุลธิดา ห.',c:'#f87171',s:4,d:'ธ.ค. 67',t:'ชอบระเบียงส่วนตัว TV 32" ดูหนังสนุก แอร์เย็นดี'}]},
+
+{id:'rimsa',lat:13.7870,lng:100.3065,type:'dorm',emoji:'🏡',name:'อพาร์ทเม้นท์บ้านริมศาลายา',
+ addr:'ซ.เลียบคลองวัฒนา ถ.พุทธมณฑลสาย 5 สามพราน',img:IMGS.a4,bc:'#f7a55b',badge:'🏠 อพาร์ทเม้นท์',
+ distKm:2.1,price:'6,000–8,300',dist:'~2.1 กม.',elec:'สอบถาม',water:'สอบถาม',phone:'สอบถาม',rating:'4.1',reviews:'45',
+ amenities:['WiFi','แอร์','เฟอร์นิเจอร์ครบ','ที่จอดรถ','CCTV','ริมคลองวัฒนา'],
+ nearby:['Lotus ศาลายา','Central','รพ.ศาลายา'],
+ transport:[
+  {num:'515',col:'#f87171',text:'ถ.พุทธมณฑลสาย 5 ห่าง 300ม.',freq:'ทุก 15-20 นาที'},
+  {num:'วิน🛵',col:'#fcd34d',text:'วินปากซอยเลียบคลองวัฒนา',freq:'07:00–20:00 น. ~20 บาท'}],
+ rv:[{n:'ชลธิชา พ.',c:'#f7a55b',s:4,d:'เม.ย. 68',t:'บรรยากาศริมคลองดีมาก เงียบสงบ อากาศดี'},
+     {n:'ศราวุธ น.',c:'#5b8dee',s:4,d:'มี.ค. 68',t:'ใกล้โลตัส ช้อปปิ้งสะดวก แวะซื้อของก่อนกลับได้เลย'},
+     {n:'สาวิตรี ค.',c:'#6ee7b7',s:5,d:'ก.พ. 68',t:'ห้องกว้างคุ้มราคา เฟอร์นิเจอร์ครบ ไม่ต้องซื้อเพิ่ม'},
+     {n:'ยุทธพงษ์ ว.',c:'#a78bfa',s:4,d:'ม.ค. 68',t:'เจ้าของใจดีดูแลดี ห้องสะอาด บรรยากาศสวย'},
+     {n:'อัมพร ท.',c:'#f87171',s:4,d:'ธ.ค. 67',t:'ใกล้ Central ช้อปปิ้งสะดวก มีรถเมล์ผ่านใกล้ๆ'}]},
+
+{id:'rangsee',lat:13.8037,lng:100.2960,type:'dorm',emoji:'🏠',name:'Rangseeplace รังสีเพลส',
+ addr:'ถ.ศาลายา-นครชัยศรี ต.ศาลายา',img:IMGS.a5,bc:'#f7a55b',badge:'🏠 อพาร์ทเม้นท์',
+ distKm:1.5,price:'5,800+',dist:'~1.5 กม.',elec:'7.2 บาท/หน่วย',water:'สอบถาม',phone:'085-120-1111',rating:'4.4',reviews:'38',
+ amenities:['WiFi รวมค่าเช่า','แอร์','TV','ตู้เย็น','ระเบียง','Fitness','สวน','32-99 ตร.ม.'],
+ nearby:['Makro ~1.1กม.','Lotus ~2.1กม.'],
+ transport:[
+  {num:'515',col:'#f87171',text:'ผ่านถ.ศาลายา-นครชัยศรี',freq:'ทุก 15-20 นาที'},
+  {num:'124',col:'#6ee7b7',text:'สนามหลวง → มทร.รัตนโกสินทร์',freq:'ทุก 25-30 นาที'},
+  {num:'วิน🛵',col:'#fcd34d',text:'วินมอเตอร์ไซค์หน้าหอ',freq:'06:00–22:00 น. ~25 บาท'}],
+ rv:[{n:'พงษ์พัฒน์ จ.',c:'#f7a55b',s:5,d:'เม.ย. 68',t:'Fitness ในหอพัก ออกกำลังกายได้ทุกวัน ประหยัดค่ายิม'},
+     {n:'จินตนา บ.',c:'#5b8dee',s:4,d:'มี.ค. 68',t:'WiFi รวมค่าเช่า ไม่ต้องจ่ายเพิ่ม ห้องกว้างสบาย'},
+     {n:'สมบัติ ล.',c:'#6ee7b7',s:4,d:'ก.พ. 68',t:'ใกล้ Makro ซื้อของสะดวก รถเมล์หลายสายผ่าน'},
+     {n:'วรรณภา ก.',c:'#a78bfa',s:5,d:'ม.ค. 68',t:'ระเบียงสวยมาก วิวดี อากาศถ่ายเทดี อยู่สบาย'},
+     {n:'ชัยยุทธ ส.',c:'#f87171',s:4,d:'ธ.ค. 67',t:'ค่าไฟ 7.2 บาท WiFi ฟรีคุ้มมาก สวนพักผ่อนร่มรื่น'}]},
+
+{id:'bestplus',lat:13.8017,lng:100.3162,type:'dorm',emoji:'🏢',name:'The Best Plus Residence',
+ addr:'21 ถ.พุทธมณฑล-นครชัยศรี ต.ศาลายา',img:IMGS.a6,bc:'#f7a55b',badge:'🏠 Residence',
+ distKm:2.5,price:'6,500–12,000',dist:'~2.5 กม.',elec:'7 บาท/หน่วย',water:'20 บาท/หน่วย',phone:'095-764-1050',rating:'4.3',reviews:'138',
+ amenities:['WiFi','แอร์','เฟอร์นิเจอร์ครบ','รถตู้รับส่ง','รปภ.24ชม.','ห้องอ่านหนังสือ','2 ตึก 8 ชั้น'],
+ nearby:['7-Eleven','KFC','McDonald\'s','Lotus'],
+ transport:[
+  {num:'515',col:'#f87171',text:'ผ่านถ.ศาลายา-นครชัยศรี',freq:'ทุก 15-20 นาที'},
+  {num:'รถตู้🚐',col:'#a78bfa',text:'รถตู้หอพักรับส่งมหาลัย ฟรี',freq:'เช้า-เย็น สำหรับผู้เช่า'},
+  {num:'วิน🛵',col:'#fcd34d',text:'วินมอเตอร์ไซค์หน้าหอ',freq:'06:00–22:00 น. ~30 บาท'}],
+ rv:[{n:'ปณิธาน ว.',c:'#f7a55b',s:5,d:'เม.ย. 68',t:'รถตู้รับส่งมหาลัย สุดประทับใจ! ไม่ต้องขับรถเอง'},
+     {n:'มนัสนันท์ ก.',c:'#5b8dee',s:4,d:'มี.ค. 68',t:'ใกล้ KFC McDonald\'s สะดวกมาก ห้องกว้าง เฟอร์นิเจอร์ครบ'},
+     {n:'รัตนชัย บ.',c:'#6ee7b7',s:4,d:'ก.พ. 68',t:'ห้องอ่านหนังสือ 24 ชม. ดีมากช่วงสอบ ค่าน้ำค่าไฟสมเหตุ'},
+     {n:'สุภาพร น.',c:'#a78bfa',s:5,d:'ม.ค. 68',t:'รปภ.ดูแลตลอดคืน รู้สึกปลอดภัย เจ้าของใจดีแก้ปัญหาไว'},
+     {n:'วัฒนา พ.',c:'#f87171',s:3,d:'ธ.ค. 67',t:'ค่าไฟแพงนิดตอนใช้แอร์เต็มที่ แต่โดยรวมคุณภาพดีนะ'}]},
+
+{id:'kpn',lat:13.7989,lng:100.3136,type:'dorm',emoji:'🏠',name:'KPN Place',
+ addr:'160/29 ซ.สหพร 8 ถ.ศาลายา-นครชัยศรี',img:IMGS.a7,bc:'#f7a55b',badge:'🏠 อพาร์ทเม้นท์',
+ distKm:1.2,price:'5,400–7,500',dist:'~1.2 กม.',elec:'สอบถาม',water:'สอบถาม',phone:'089-995-0092',rating:'3.9',reviews:'30',
+ amenities:['WiFi','แอร์','เฟอร์นิเจอร์','ที่จอดรถ','Key card','CCTV'],
+ nearby:['รพ.ศาลายา ~1กม.','ม.มหิดล ~800ม.'],
+ transport:[
+  {num:'515',col:'#f87171',text:'ผ่านถ.ศาลายา ห่าง 200ม.',freq:'ทุก 15-20 นาที'},
+  {num:'547',col:'#93c5fd',text:'สีลม → มทร.รัตนโกสินทร์',freq:'ทุก 20-25 นาที'},
+  {num:'วิน🛵',col:'#fcd34d',text:'วินมอเตอร์ไซค์ซ.สหพร',freq:'06:00–21:00 น. ~20 บาท'}],
+ rv:[{n:'อนงค์นาถ ร.',c:'#f7a55b',s:4,d:'เม.ย. 68',t:'Key card ทุกชั้น ปลอดภัยดี ที่จอดรถกว้าง ราคาปานกลาง'},
+     {n:'ทวีศักดิ์ ม.',c:'#5b8dee',s:4,d:'มี.ค. 68',t:'ใกล้รพ.ศาลายา สบายใจตอนเจ็บป่วย มีวินมอเตอร์ไซค์'},
+     {n:'ขนิษฐา ป.',c:'#6ee7b7',s:4,d:'ก.พ. 68',t:'WiFi ใช้ได้ดี ห้องสะอาด เจ้าหน้าที่ดูแลดี'},
+     {n:'พัชรินทร์ ส.',c:'#a78bfa',s:3,d:'ม.ค. 68',t:'โดยรวมโอเค ที่จอดรถบางครั้งแน่น ควรเพิ่มอีกหน่อย'},
+     {n:'ปฏิพล จ.',c:'#f87171',s:4,d:'ธ.ค. 67',t:'ราคาเหมาะสม ห้องกว้าง สะอาด ใกล้รถเมล์ สะดวกไปเรียน'}]},
+
+// NEW 10
+{id:'siripat',lat:13.7970,lng:100.2940,type:'dorm',emoji:'🏠',name:'สิริพัฒน์ ศาลายา',
+ addr:'ซ.ตั้งสิน ถ.พุทธมณฑล ต.ศาลายา',img:IMGS.a8,bc:'#f7a55b',badge:'🏠 อพาร์ทเม้นท์',
+ distKm:1.0,price:'3,500–5,000',dist:'~1.0 กม.',elec:'7 บาท/หน่วย',water:'18 บาท/หน่วย',phone:'02-889-xxxx',rating:'4.2',reviews:'55',
+ amenities:['WiFi','แอร์','ตู้เย็น','TV','ที่จอดรถ','CCTV','เครื่องซักผ้าส่วนกลาง'],
+ nearby:['ตลาดนัดใกล้หอ','ร้านข้าวแกง','7-Eleven'],
+ transport:[
+  {num:'515',col:'#f87171',text:'ถ.พุทธมณฑลสาย 5 ห่าง 400ม.',freq:'ทุก 15-20 นาที'},
+  {num:'วิน🛵',col:'#fcd34d',text:'วินหน้าซอยตั้งสิน',freq:'06:30–21:00 น. ~20 บาท'}],
+ rv:[{n:'วิลาสินี ก.',c:'#f7a55b',s:4,d:'เม.ย. 68',t:'ค่าไฟไม่แพง WiFi ใช้ได้ ห้องสะอาด เจ้าของดูแลดี'},
+     {n:'สุขสันต์ ป.',c:'#5b8dee',s:4,d:'มี.ค. 68',t:'ใกล้ตลาดนัด ซื้อของสดได้ มีร้านข้าวแกงถูก กินสะดวก'},
+     {n:'รมณ์ธีรา ว.',c:'#6ee7b7',s:5,d:'ก.พ. 68',t:'เจ้าของใจดี แก้ปัญหาไว เครื่องซักผ้าส่วนกลางสะอาด'},
+     {n:'นรินทร์ ต.',c:'#a78bfa',s:4,d:'ม.ค. 68',t:'1 กม.จากมหาลัย ขี่จักรยานได้เลย ประหยัดค่าวิน'},
+     {n:'ลัดดาวัลย์ บ.',c:'#f87171',s:3,d:'ธ.ค. 67',t:'ห้องโอเค บางครั้งน้ำไหลอ่อน ควรปรับปรุง ราคาคุ้ม'}]},
+
+{id:'chomfah',lat:13.8000,lng:100.3010,type:'dorm',emoji:'🏠',name:'ชมฟ้าแมนชั่น',
+ addr:'ซ.อาภา ถ.ศาลายา-บางเลน ต.ศาลายา',img:IMGS.a9,bc:'#f7a55b',badge:'🏠 แมนชั่น',
+ distKm:1.2,price:'3,500–4,500',dist:'~1.2 กม.',elec:'6.5 บาท/หน่วย',water:'15 บาท/หน่วย',phone:'สอบถาม',rating:'4.0',reviews:'42',
+ amenities:['WiFi','แอร์','ค่าน้ำไฟถูก!','ที่จอดรถ','บรรยากาศร่มรื่น'],
+ nearby:['ร้านซักรีดใกล้','ปั้มน้ำมัน PTT'],
+ transport:[
+  {num:'125',col:'#fdba74',text:'อนุเสาวรีย์ชัย → มทร.รัตนโกสินทร์',freq:'ทุก 20-30 นาที'},
+  {num:'วิน🛵',col:'#fcd34d',text:'วินมอเตอร์ไซค์ซ.อาภา',freq:'07:00–21:00 น. ~25 บาท'}],
+ rv:[{n:'พิมพา จ.',c:'#f7a55b',s:5,d:'เม.ย. 68',t:'ค่าไฟถูกมาก 6.5 บาท ค่าน้ำก็ถูก ประหยัดกว่าที่อื่น'},
+     {n:'เอกชัย ว.',c:'#5b8dee',s:4,d:'มี.ค. 68',t:'บรรยากาศร่มรื่น ต้นไม้เยอะ เงียบ เหมาะอ่านหนังสือ'},
+     {n:'สุดา น.',c:'#6ee7b7',s:4,d:'ก.พ. 68',t:'ใกล้ปั้มน้ำมัน สะดวก มีร้านซักรีดแผงลอยใกล้ๆ'},
+     {n:'ธนภัทร ป.',c:'#a78bfa',s:4,d:'ม.ค. 68',t:'ไม่หรูแต่สะอาดใช้ได้ ราคาคุ้มมาก แนะนำคนงบน้อย'},
+     {n:'อาทิตย์ ก.',c:'#f87171',s:3,d:'ธ.ค. 67',t:'WiFi บางครั้งช้า แต่ค่าน้ำค่าไฟถูกกว่าที่อื่น คุ้มโดยรวม'}]},
+
+{id:'romyen',lat:13.7900,lng:100.3150,type:'dorm',emoji:'🏡',name:'ร่มเย็น อพาร์ทเมนต์',
+ addr:'ซ.โรงเรียนวัดดอนหวาย 2 ต.บางกระทึก อ.สามพราน',img:IMGS.a10,bc:'#f7a55b',badge:'🏠 อพาร์ทเม้นท์',
+ distKm:2.0,price:'4,600–7,000',dist:'~2.0 กม.',elec:'7.5 บาท/หน่วย',water:'20 บาท/หน่วย',phone:'สอบถาม',rating:'4.3',reviews:'67',
+ amenities:['WiFi','แอร์','ตู้เย็น','เครื่องทำน้ำอุ่น','ที่จอดรถ','CCTV','บรรยากาศธรรมชาติ'],
+ nearby:['ตลาดน้ำดอนหวาย 2.4กม.','ร้านอาหาร'],
+ transport:[
+  {num:'539',col:'#fdba74',text:'อ้อมน้อย → อนุเสาวรีย์ชัย',freq:'ทุก 20-30 นาที'},
+  {num:'วิน🛵',col:'#fcd34d',text:'วินปากซอยวัดดอนหวาย',freq:'07:00–20:00 น. ~25 บาท'}],
+ rv:[{n:'สมฤดี ว.',c:'#f7a55b',s:5,d:'เม.ย. 68',t:'ร่มรื่นมาก ต้นไม้เยอะ อากาศดีสุดๆ เหมือนอยู่บ้านชนบท'},
+     {n:'วัลลภ ก.',c:'#5b8dee',s:4,d:'มี.ค. 68',t:'ใกล้ตลาดน้ำดอนหวาย พาแฟนไปเดินได้ บรรยากาศดี'},
+     {n:'ปิ่นอนงค์ ส.',c:'#6ee7b7',s:4,d:'ก.พ. 68',t:'ห้องน้ำสะอาด เฟอร์นิเจอร์ครบ ราคาสมเหตุสมผล'},
+     {n:'ภานุวัฒน์ บ.',c:'#a78bfa',s:4,d:'ม.ค. 68',t:'บรรยากาศธรรมชาติ เงียบสงบ นอนหลับสบาย'},
+     {n:'ธัญลักษณ์ ม.',c:'#f87171',s:4,d:'ธ.ค. 67',t:'ไกลหน่อยแต่สงบ มีวินมอเตอร์ไซค์ไปมหาลัยได้'}]},
+
+{id:'salayagrand',lat:13.7995,lng:100.3095,type:'condo',emoji:'🏙',name:'ศาลายา แกรนด์',
+ addr:'ซ.หมู่บ้านสหพร 1 ถ.ศาลายา-นครชัยศรี ต.ศาลายา',img:IMGS.c2,bc:'#a78bfa',badge:'🏢 คอนโด',
+ distKm:1.0,price:'5,900–6,500',dist:'~1.0 กม.',elec:'8 บาท/หน่วย',water:'20 บาท/หน่วย',phone:'สอบถาม',rating:'4.1',reviews:'38',
+ amenities:['WiFi','แอร์','ตู้เย็น','TV','Key card','ลิฟท์','ที่จอดรถ','สระว่ายน้ำ'],
+ nearby:['KPN Place ใกล้เคียง','รพ.ศาลายา'],
+ transport:[
+  {num:'515',col:'#f87171',text:'ผ่านถ.ศาลายา-นครชัยศรี',freq:'ทุก 15-20 นาที'},
+  {num:'547',col:'#93c5fd',text:'สีลม → มทร.รัตนโกสินทร์',freq:'ทุก 20-25 นาที'},
+  {num:'วิน🛵',col:'#fcd34d',text:'วินมอเตอร์ไซค์ซ.สหพร 1',freq:'06:00–22:00 น. ~25 บาท'}],
+ rv:[{n:'ศิวพร ว.',c:'#a78bfa',s:4,d:'เม.ย. 68',t:'สระว่ายน้ำดีมาก ลิฟท์เร็ว Key card ทุกชั้น ปลอดภัย'},
+     {n:'ณรงค์ศักดิ์ พ.',c:'#5b8dee',s:4,d:'มี.ค. 68',t:'บรรยากาศคอนโด ห้องสะอาด แอร์เย็น WiFi เร็ว'},
+     {n:'สาลิกา ก.',c:'#6ee7b7',s:5,d:'ก.พ. 68',t:'สระว่ายน้ำดีมาก! ชั้นบนวิวสวย อยู่สบาย รักที่นี่มาก'},
+     {n:'ชัยนันท์ ส.',c:'#f7a55b',s:4,d:'ม.ค. 68',t:'ราคาคุ้มค่า มีสระว่ายน้ำ ค่าไฟ 8 บาทปกติ โดยรวมดี'},
+     {n:'กาญจนา ร.',c:'#f87171',s:3,d:'ธ.ค. 67',t:'ลิฟท์บางครั้งช้า แต่สระว่ายน้ำดี ห้องสะอาด ราคาเหมาะสม'}]},
+
+{id:'pearploy',lat:13.8015,lng:100.2985,type:'dorm',emoji:'💎',name:'ห้องเช่าเพชรพลอย',
+ addr:'ซ.ดาวทอง 1 ถ.บางเลน ต.ศาลายา',img:IMGS.a1,bc:'#f7a55b',badge:'🏠 ห้องเช่า',
+ distKm:2.3,price:'2,600–3,100',dist:'~2.3 กม.',elec:'6 บาท/หน่วย',water:'15 บาท/หน่วย',phone:'สอบถาม',rating:'4.0',reviews:'28',
+ amenities:['WiFi','แอร์','ค่าน้ำไฟถูก','ที่จอดรถ','เงียบสงบ'],
+ nearby:['ตลาดสด','ร้านอาหารพื้นบ้าน','วัดใกล้เคียง'],
+ transport:[
+  {num:'539',col:'#fdba74',text:'ผ่านถ.บางเลน',freq:'ทุก 20-30 นาที'},
+  {num:'วิน🛵',col:'#fcd34d',text:'วินปากซอยดาวทอง',freq:'07:00–20:00 น. ~30 บาท'}],
+ rv:[{n:'บุญชัย ท.',c:'#f7a55b',s:4,d:'เม.ย. 68',t:'ค่าไฟถูกมาก 6 บาทเดือนนึงค่าไฟไม่แพงเลย'},
+     {n:'สุชาดา ม.',c:'#5b8dee',s:4,d:'มี.ค. 68',t:'เงียบสงบ ใกล้วัด บรรยากาศดี เหมาะคนชอบความสงบ'},
+     {n:'อนุสรณ์ ก.',c:'#6ee7b7',s:3,d:'ก.พ. 68',t:'ราคาถูก คุ้มค่า แต่ไกลมหาลัยหน่อย ต้องพึ่งวิน'},
+     {n:'ปรัชญา น.',c:'#a78bfa',s:4,d:'ม.ค. 68',t:'ห้องสะอาด เจ้าของใจดี ราคาถูกสุดในย่าน'},
+     {n:'สมฤทธิ์ ว.',c:'#f87171',s:4,d:'ธ.ค. 67',t:'ใกล้ตลาดสด กินข้าวถูก ประหยัดดี มีรถเมล์ผ่าน'}]},
+
+{id:'chalerm',lat:13.7940,lng:100.3080,type:'dorm',emoji:'🏠',name:'ชลพร อพาร์ทเมนท์',
+ addr:'ถ.ศาลายา-บางภาษี ต.ศาลายา อ.พุทธมณฑล',img:IMGS.a2,bc:'#f7a55b',badge:'🏠 อพาร์ทเม้นท์',
+ distKm:1.8,price:'3,500–4,500',dist:'~1.8 กม.',elec:'7 บาท/หน่วย',water:'18 บาท/หน่วย',phone:'สอบถาม',rating:'4.1',reviews:'33',
+ amenities:['WiFi','แอร์','ที่จอดรถ','CCTV','ราคาถูก','ใกล้ม.มหิดล'],
+ nearby:['ม.มหิดล ใกล้เคียง','ร้านอาหาร'],
+ transport:[
+  {num:'125',col:'#fdba74',text:'ผ่านถ.ศาลายา-บางภาษี',freq:'ทุก 20-30 นาที'},
+  {num:'388',col:'#a78bfa',text:'ปากเกร็ด/บางใหญ่ → ม.มหิดล',freq:'ทุก 30-40 นาที'},
+  {num:'วิน🛵',col:'#fcd34d',text:'วินมอเตอร์ไซค์หน้าหอ',freq:'06:30–21:00 น. ~25 บาท'}],
+ rv:[{n:'นฤมล ส.',c:'#f7a55b',s:4,d:'เม.ย. 68',t:'ราคาถูก ห้องสะอาด ใกล้ทั้ง 2 มหาลัย สะดวกมาก'},
+     {n:'กิตติพัฒน์ พ.',c:'#5b8dee',s:4,d:'มี.ค. 68',t:'เจ้าของใจดี ห้องโอเค ค่าไฟเหมาะสม มีที่จอดรถ'},
+     {n:'ภัคจิรา ว.',c:'#6ee7b7',s:5,d:'ก.พ. 68',t:'ดีมาก ราคาถูก ใกล้มหาลัย มีวิน ขนส่งสะดวก'},
+     {n:'ปิยะวัฒน์ ก.',c:'#a78bfa',s:3,d:'ม.ค. 68',t:'WiFi บางครั้งช้า แต่ราคาคุ้ม โดยรวมโอเค'},
+     {n:'มนทิรา บ.',c:'#f87171',s:4,d:'ธ.ค. 67',t:'สะอาด ราคาไม่แพง ใกล้มหิดลด้วย เดินทางง่าย'}]},
+
+{id:'siriplace',lat:13.8030,lng:100.3020,type:'dorm',emoji:'🌟',name:'สิรสัณห์ เพลส',
+ addr:'ต.ศาลายา อ.พุทธมณฑล จ.นครปฐม',img:IMGS.a3,bc:'#f7a55b',badge:'🏠 หอพัก',
+ distKm:1.8,price:'4,800–6,000',dist:'~1.8 กม.',elec:'7.5 บาท/หน่วย',water:'20 บาท/หน่วย',phone:'สอบถาม',rating:'4.5',reviews:'41',
+ amenities:['WiFi','แอร์','ตู้เย็น','ระบบรักษาความปลอดภัย','ที่จอดรถ','ใกล้ม.มหิดล'],
+ nearby:['ม.มหิดล ศาลายา','7-Eleven'],
+ transport:[
+  {num:'515',col:'#f87171',text:'ผ่านถ.ศาลายา-นครชัยศรี',freq:'ทุก 15-20 นาที'},
+  {num:'วิน🛵',col:'#fcd34d',text:'วินมอเตอร์ไซค์หน้าหอ',freq:'06:00–22:00 น. ~25 บาท'}],
+ rv:[{n:'ปิยาภรณ์ ร.',c:'#f7a55b',s:5,d:'เม.ย. 68',t:'หอพักดีมาก สะอาด ปลอดภัย ใกล้ทั้งมหิดลและราชมงคล'},
+     {n:'เดชา ก.',c:'#5b8dee',s:5,d:'มี.ค. 68',t:'เจ้าของดูแลดีมาก ระบบรักษาความปลอดภัยดี WiFi เร็ว'},
+     {n:'วิภาดา ส.',c:'#6ee7b7',s:4,d:'ก.พ. 68',t:'ห้องกว้าง ตู้เย็นใหม่ สะอาด อยู่สบาย ราคาเหมาะสม'},
+     {n:'ศุภชัย น.',c:'#a78bfa',s:4,d:'ม.ค. 68',t:'มีวินหน้าหอ 7-Eleven ใกล้ สะดวกมาก'},
+     {n:'กัลยาณี พ.',c:'#f87171',s:5,d:'ธ.ค. 67',t:'ชอบมากเลย ปลอดภัย บรรยากาศดี เพื่อนบ้านดี แนะนำ'}]},
+
+// Laundry
+{id:'cool',lat:13.7979,lng:100.3277,type:'laundry',emoji:'👕',name:'Cool Laundry ศาลายา',
+ addr:'200/114 ต.ศาลายา อ.พุทธมณฑล',img:IMGS.lau,bc:'#4ecdc4',badge:'👕 ร้านซักรีด',
+ distKm:3.2,price:'40–120 บาท/รอบ',dist:null,elec:null,water:null,phone:'084-022-6477',rating:'4.9',reviews:'47',
+ amenities:['เปิด 24 ชม.','เครื่อง 6-28 กก.','Air-con','WiFi','Drop-off ได้','แอปสแกนจ่าย'],
+ nearby:[],
+ transport:[{num:'วิน🛵',col:'#fcd34d',text:'เรียกวินมาส่ง/รับผ้า',freq:'บริการรับ-ส่ง'}],
+ rv:[{n:'ปิยะ ก.',c:'#4ecdc4',s:5,d:'เม.ย. 68',t:'เปิด 24 ชม. แอปสแกนจ่ายง่าย ผ้าสะอาดกลิ่นหอม'},
+     {n:'สุทธิดา ว.',c:'#5b8dee',s:5,d:'มี.ค. 68',t:'เครื่องใหม่ สะอาด มี AC นั่งรอสบาย WiFi ให้ใช้ฟรี'},
+     {n:'อภิชัย ม.',c:'#6ee7b7',s:5,d:'ก.พ. 68',t:'Drop-off ดีมาก ฝากไว้เช้าเดินทางไปมหาลัย กลับมาผ้าพับรอ'},
+     {n:'รุ่งนภา ส.',c:'#a78bfa',s:4,d:'ม.ค. 68',t:'เครื่อง 28 กก. ซักผ้าปูที่นอนได้ด้วย คุ้มมาก'},
+     {n:'ณัฐกานต์ พ.',c:'#f87171',s:5,d:'ธ.ค. 67',t:'ดีที่สุดในศาลายา บางช่วงพีคเครื่องเต็ม แต่โดยรวมดีสุด'}]},
+
+{id:'wash',lat:13.7952,lng:100.3285,type:'laundry',emoji:'🧺',name:'WASHENJOY ศาลายา',
+ addr:'ต.ศาลายา อ.พุทธมณฑล',img:IMGS.lau,bc:'#4ecdc4',badge:'👕 ร้านซักรีด',
+ distKm:3.2,price:'35–80 บาท/รอบ',dist:null,elec:null,water:null,phone:'-',rating:'5.0',reviews:'5',
+ amenities:['เปิด 24 ชม.','App สแกนจ่าย','WiFi ฟรี','โซฟานั่งรอ','Eco Lab detergent'],
+ nearby:[],transport:[],
+ rv:[{n:'สุภัชชา ก.',c:'#4ecdc4',s:5,d:'เม.ย. 68',t:'แอปใช้งานง่าย สแกนจ่ายสะดวก ไม่ต้องพกเหรียญ'},
+     {n:'ธนาธิป ว.',c:'#5b8dee',s:5,d:'มี.ค. 68',t:'ผงซักฟอก Eco Lab อย่างดี ผ้าสะอาดกลิ่นหอม ไม่ระคาย'},
+     {n:'พิณนภา ส.',c:'#6ee7b7',s:5,d:'ก.พ. 68',t:'โซฟาสบาย WiFi ดี ดูซีรีส์รอได้เลย สถานที่สะอาด'},
+     {n:'อธิชา ม.',c:'#a78bfa',s:5,d:'ม.ค. 68',t:'แอปแจ้งเตือนเมื่อซักเสร็จ ไม่ต้องนั่งรอ ดีมาก'},
+     {n:'วุฒิชัย พ.',c:'#f7a55b',s:5,d:'ธ.ค. 67',t:'เครื่องสะอาด detergent อย่างดี ผ้าออกมาขาว ชอบมาก'}]},
+
+// Shop
+{id:'lotus',lat:13.7940,lng:100.3350,type:'shop',emoji:'🛒',name:"Lotus's ศาลายา",
+ addr:'ถ.พุทธมณฑลสาย 5 ต.ศาลายา',img:IMGS.sh,bc:'#6ee7b7',badge:'🛒 ซูเปอร์มาร์เก็ต',
+ distKm:3.5,price:null,dist:'~3.5 กม.',elec:null,water:null,phone:'-',rating:'4.2',reviews:'-',
+ amenities:['Supermarket','เปิดทุกวัน','ที่จอดรถเยอะ','ร้านอาหาร'],
+ nearby:[],transport:[{num:'515',col:'#f87171',text:'ปลายทาง Lotus/เซ็นทรัลศาลายา',freq:'ทุก 15-20 นาที'}],
+ rv:[{n:'วราพร ก.',c:'#6ee7b7',s:4,d:'เม.ย. 68',t:'ของครบ ราคาเหมาะสม ห้องน้ำสะอาด ที่จอดรถกว้าง'},
+     {n:'พิทักษ์ ว.',c:'#5b8dee',s:5,d:'มี.ค. 68',t:'ร้านอาหารอร่อย เปิดทุกวัน สะดวก รถเมล์ผ่านหน้า'},
+     {n:'สุนันทา บ.',c:'#f7a55b',s:4,d:'ก.พ. 68',t:'ซื้อของสดได้ ราคาถูกกว่าร้านทั่วไป'},
+     {n:'ไพรัตน์ ส.',c:'#a78bfa',s:4,d:'ม.ค. 68',t:'มีส่วนลดสมาชิก ประหยัดได้เยอะ'},
+     {n:'อรุณรัตน์ ม.',c:'#f87171',s:4,d:'ธ.ค. 67',t:'ของครบ ราคาเหมาะ ชอบ'}]},
+
+{id:'central',lat:13.8068,lng:100.3480,type:'shop',emoji:'🏬',name:'Central Plaza ศาลายา',
+ addr:'ถ.บรมราชชนนี ต.ศาลายา',img:IMGS.sh,bc:'#6ee7b7',badge:'🏬 ห้างสรรพสินค้า',
+ distKm:4.0,price:null,dist:'~4.0 กม.',elec:null,water:null,phone:'-',rating:'4.3',reviews:'-',
+ amenities:['ห้างสรรพสินค้า','Cinema','ร้านอาหารเยอะ','เปิดทุกวัน'],
+ nearby:[],transport:[
+  {num:'515',col:'#f87171',text:'ปลายทาง เซ็นทรัลศาลายา',freq:'ทุก 15-20 นาที'},
+  {num:'547',col:'#93c5fd',text:'ปลายทาง เซ็นทรัลศาลายา',freq:'ทุก 20-25 นาที'}],
+ rv:[{n:'ชัชวาล ก.',c:'#6ee7b7',s:5,d:'เม.ย. 68',t:'ครบครันมาก Cinema ใหม่ ร้านอาหารหลายร้าน สะดวก'},
+     {n:'รัชนีกร ว.',c:'#5b8dee',s:4,d:'มี.ค. 68',t:'เซ็นทรัลใหม่ ดีมาก ร้านอาหารหลายสไตล์ ที่จอดรถกว้าง'},
+     {n:'วิเชียร ส.',c:'#f7a55b',s:4,d:'ก.พ. 68',t:'รถเมล์ 2 สายถึงเซ็นทรัล ไม่ต้องขับรถ ประหยัด'},
+     {n:'นิตยา บ.',c:'#a78bfa',s:5,d:'ม.ค. 68',t:'ปลายทางรถเมล์ 515 เลย สะดวก Cinema สวย เสียงดี'},
+     {n:'ประพล ม.',c:'#f87171',s:4,d:'ธ.ค. 67',t:'วันหยุดแน่นหน่อย แต่ร้านอาหารอร่อย หลายตัวเลือก'}]},
+
+// Hospital
+{id:'hospital',lat:13.7990,lng:100.3185,type:'hospital',emoji:'🏥',name:'โรงพยาบาลศาลายา',
+ addr:'ถ.ศาลายา-นครชัยศรี ต.ศาลายา อ.พุทธมณฑล',img:IMGS.hos,bc:'#f87171',badge:'🏥 โรงพยาบาล',
+ distKm:1.8,price:'รพ.รัฐ',dist:'~1-2 กม.',elec:null,water:null,phone:'02-441-0050',rating:'4.0',reviews:'-',
+ amenities:['รพ.รัฐ','ฉุกเฉิน 24 ชม.','OPD','ทันตกรรม','เภสัชกรรม'],
+ nearby:[],transport:[{num:'515',col:'#f87171',text:'ผ่านหน้า รพ.ศาลายา',freq:'ทุก 15-20 นาที'}],
+ rv:[{n:'สมศรี ว.',c:'#f87171',s:4,d:'เม.ย. 68',t:'เจ้าหน้าที่ใจดี รับรักษาเร็ว รพ.รัฐราคาถูก ใกล้หอพักมาก'},
+     {n:'บุรินทร์ ก.',c:'#5b8dee',s:4,d:'มี.ค. 68',t:'ฉุกเฉิน 24 ชม. รู้สึกปลอดภัยที่อยู่ใกล้โรงพยาบาล'},
+     {n:'ปรียาภรณ์ ส.',c:'#6ee7b7',s:3,d:'ก.พ. 68',t:'บางวันรอนาน แต่แพทย์ดี ค่ารักษาถูกกว่า รพ.เอกชน'},
+     {n:'นพดล ม.',c:'#a78bfa',s:4,d:'ม.ค. 68',t:'ทันตกรรมดีมาก อุดฟัน ขูดหินปูนราคาถูก นักศึกษาแนะนำ'},
+     {n:'กมลรัตน์ บ.',c:'#f7a55b',s:4,d:'ธ.ค. 67',t:'เภสัชกรรมครบ ยาหาได้ง่าย ราคาถูก คุ้มมาก'}]},
+
+// Bus stop
+{id:'bus1',lat:13.7960,lng:100.3015,type:'bus',emoji:'🚏',name:'ป้ายรถเมล์ หน้า มทร.',
+ addr:'ถ.พุทธมณฑลสาย 5 หน้ามหาวิทยาลัย',img:IMGS.bus,bc:'#fcd34d',badge:'🚌 ป้ายรถ',
+ distKm:0,price:null,dist:'หน้ามหาลัย',elec:null,water:null,phone:null,rating:'4.0',reviews:null,
+ amenities:['ป้ายรอรถ มีหลังคา','วินมอเตอร์ไซค์'],
+ nearby:['ประตูมหาลัย','7-Eleven'],
+ transport:[
+  {num:'515',col:'#f87171',text:'อนุเสาวรีย์ชัย ↔ เซ็นทรัลศาลายา',freq:'ทุก 15-20 นาที'},
+  {num:'547',col:'#93c5fd',text:'สีลม ↔ มทร.รัตนโกสินทร์',freq:'ทุก 20-25 นาที'},
+  {num:'124',col:'#6ee7b7',text:'สนามหลวง ↔ มทร.',freq:'ทุก 25-30 นาที'},
+  {num:'125',col:'#fdba74',text:'อนุเสาวรีย์ ↔ มทร.',freq:'ทุก 20-25 นาที'},
+  {num:'วิน🛵',col:'#fcd34d',text:'วินมอเตอร์ไซค์หน้าประตูมหาลัย',freq:'06:00–22:00 น. เริ่ม 20 บาท'}],
+ rv:[{n:'นิพนธ์ ก.',c:'#fcd34d',s:4,d:'เม.ย. 68',t:'รถเมล์ถี่ดี มีหลายสาย ไปอนุสาวรีย์ได้เลย สะดวก'},
+     {n:'อุบลรัตน์ ว.',c:'#5b8dee',s:5,d:'มี.ค. 68',t:'ป้ายมีหลังคา นั่งรอสบาย วินมอเตอร์ไซค์เยอะ'},
+     {n:'ไชยวัฒน์ ส.',c:'#6ee7b7',s:4,d:'ก.พ. 68',t:'รถ 515 บ่อยดี ไปเซ็นทรัลสะดวก ราคา 15-25 บาท'},
+     {n:'อนงค์ บ.',c:'#f7a55b',s:4,d:'ม.ค. 68',t:'มีรถ 4 สายผ่าน เลือกได้ตามจุดหมาย วินตลอดวัน'},
+     {n:'พงศกร ม.',c:'#f87171',s:3,d:'ธ.ค. 67',t:'ชั่วโมงเร่งด่วนรถแน่นหน่อย แต่ถี่ดี ไม่รอนาน'}]}
+];
+
+// ─── MAP ─────────────────────────────────────────────────────
+const map=L.map('map',{center:[ULT,ULG],zoom:15,zoomControl:false});
+L.control.zoom({position:'bottomright'}).addTo(map);
+// Light-warm map tile ให้เข้ากับธีม
+L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{
+  attribution:'© OpenStreetMap © CARTO',subdomains:'abcd',maxZoom:19
+}).addTo(map);
+
+// ─── MARKERS ─────────────────────────────────────────────────
+let allMk=[];
+DATA.forEach(p=>{
+  const col=C[p.type]||'#9aa8c0';
+  const isUni=p.type==='uni',isBus=p.type==='bus';
+  const sz=isUni?46:isBus?30:36;
+  const br=isUni?'10px':'50%';
+  const fs=isUni?'20px':'15px';
+  const icon=L.divIcon({
+    html:`<div style="width:${sz}px;height:${sz}px;background:${col};border:2.5px solid #fff;border-radius:${br};display:flex;align-items:center;justify-content:center;font-size:${fs};box-shadow:0 3px 10px rgba(0,0,0,.25);cursor:pointer">${p.emoji}</div>`,
+    className:'',iconSize:[sz,sz],iconAnchor:[sz/2,sz/2],popupAnchor:[0,-sz/2-4]
+  });
+  const mk=L.marker([p.lat,p.lng],{icon}).on('click',()=>{
+    sOpen(); openMdl(p);
+  }).addTo(map);
+  allMk.push({mk,type:p.type});
+});
+
+// ─── FILTER ──────────────────────────────────────────────────
+function setF(type,btn){
+  sFilter();
+  document.querySelectorAll('.fb').forEach(b=>{
+    b.classList.remove('on');
+    b.style.background='transparent';
+    b.style.borderColor='var(--border)';
+    b.style.color='var(--text3)';
+  });
+  btn.classList.add('on');
+  const dc=btn.querySelector('.dot').style.background;
+  btn.style.background=type==='all'?'var(--acc)':dc;
+  btn.style.borderColor=type==='all'?'var(--acc)':dc;
+  btn.style.color='#fff';
+  allMk.forEach(({mk,type:t})=>{
+    const show=type==='all'||(type==='dorm'&&(t==='dorm'||t==='uni'))||t===type;
+    show?map.addLayer(mk):map.removeLayer(mk);
+  });
+}
+
+// ─── RADIUS ──────────────────────────────────────────────────
+let rcs=[],rOn=false;
+function togRad(){
+  const btn=document.getElementById('rbtn');
+  if(rOn){rcs.forEach(c=>map.removeLayer(c));rcs=[];btn.classList.remove('on');btn.textContent='📏 รัศมี 1 กม.';rOn=false;}
+  else{
+    [[500,'#f7a55b'],[1000,'#5b8dee'],[2000,'#6ee7b7']].forEach(([r,col])=>{
+      const c=L.circle([ULT,ULG],{radius:r,color:col,weight:1.5,fillColor:col,fillOpacity:0.05,dashArray:'5,5'}).addTo(map);
+      const lb=L.divIcon({html:`<div style="color:${col};font-size:11px;font-weight:700;text-shadow:0 1px 3px rgba(255,255,255,.8)">${r>=1000?r/1000+' กม.':r+' ม.'}</div>`,className:'',iconSize:[50,16],iconAnchor:[25,8]});
+      L.marker([ULT+r*0.0000089,ULG],{icon:lb,interactive:false}).addTo(map);
+      rcs.push(c);
+    });
+    btn.classList.add('on');btn.textContent='✕ ซ่อนรัศมี';rOn=true;
+  }
+}
+
+// ─── MODAL ───────────────────────────────────────────────────
+function openMdl(p){
+  const bc=p.bc||'#f7a55b';
+  document.getElementById('mimgwrap').innerHTML=
+    `<img class="mimg" src="${p.img}" alt="${p.name}" onerror="this.parentNode.style.background='var(--bg3)';this.style.display='none'" loading="lazy">
+     <div class="mimg-badge" style="background:${bc}22;color:${bc}">${p.badge}</div>
+     <button class="close-x" onclick="closeMdlBtn()">✕</button>`;
+
+  document.getElementById('mtabs').innerHTML=
+    ['📋 ข้อมูล','🟢 Grab & รถ','⭐ รีวิว'].map((t,i)=>
+      `<button class="mtab${i===0?' on':''}" onclick="swTab(${i},this)">${t}</button>`
+    ).join('');
+
+  // Panel 0: Info
+  let p0=`<div class="mname">${p.name}</div><div class="maddr">📍 ${p.addr}</div>`;
+  if(p.rating){
+    const s=Math.round(Number(p.rating));
+    p0+=`<div class="mrating"><span class="stars">${'★'.repeat(s)}${'☆'.repeat(5-s)} ${p.rating}</span><span class="rcnt">${p.reviews?' ('+p.reviews+' รีวิว)':''}</span></div>`;
+  }
+  if(p.price||p.dist){
+    p0+='<div class="sgrid">';
+    if(p.price) p0+=`<div class="scard"><div class="slbl">💰 ค่าเช่า</div><div class="sval" style="color:${bc}">฿${p.price}</div><div class="ssub">บาท/เดือน</div></div>`;
+    if(p.dist) p0+=`<div class="scard"><div class="slbl">📏 ระยะทาง</div><div class="sval">${p.dist}</div><div class="ssub">จากมหาลัย</div></div>`;
+    p0+='</div>';
+  }
+  if(p.elec&&p.elec!=='สอบถาม') p0+=`<div class="irow"><span class="ilbl">⚡ ค่าไฟ</span><span class="ival">${p.elec}</span></div>`;
+  if(p.water&&p.water!=='สอบถาม') p0+=`<div class="irow"><span class="ilbl">💧 ค่าน้ำ</span><span class="ival">${p.water}</span></div>`;
+  if(p.phone&&p.phone!=='-'&&p.phone!=='สอบถาม') p0+=`<div class="irow"><span class="ilbl">📞 ติดต่อ</span><span class="ival">${p.phone}</span></div>`;
+  if(p.amenities&&p.amenities.length){
+    p0+='<div class="sec-lbl">✨ สิ่งอำนวยความสะดวก</div><div class="tags">';
+    p0+=p.amenities.map(a=>`<span class="tag">✓ ${a}</span>`).join('');
+    p0+='</div>';
+  }
+  if(p.nearby&&p.nearby.length){
+    p0+='<div class="sec-lbl">📍 สถานที่ใกล้เคียง</div><div class="tags">';
+    p0+=p.nearby.map(n=>`<span class="tag" style="border-color:rgba(252,211,77,.25);color:#fcd34d">📌 ${n}</span>`).join('');
+    p0+='</div>';
+  }
+
+  // Panel 1: Grab + Transport
+  let p1='';
+  if(p.distKm>0) p1+=grabHTML(p.distKm);
+  if(p.transport&&p.transport.length){
+    p1+='<div class="sec-lbl">🚌 รถสาธารณะ / วินมอเตอร์ไซค์</div>';
+    p1+=p.transport.map(t=>`
+      <div class="busitem">
+        <div class="busnum" style="background:${t.col}22;color:${t.col}">${t.num}</div>
+        <div><div class="busroute">${t.text}</div><div class="busfreq">⏱ ${t.freq}</div></div>
+      </div>`).join('');
+  } else if(p.distKm===0){
+    p1+='<div style="text-align:center;padding:20px;color:var(--text3);font-size:12px">📍 อยู่ที่มหาวิทยาลัย ไม่ต้องเดินทาง</div>';
+  }
+
+  // Panel 2: Reviews
+  let p2='';
+  if(p.rv&&p.rv.length){
+    p2=p.rv.map(r=>`
+      <div class="revcard">
+        <div class="revhead">
+          <div class="avt" style="background:${r.c}22;color:${r.c}">${r.n[0]}</div>
+          <div><div class="rvname">${r.n}</div><div class="rvdate">${r.d}</div></div>
+        </div>
+        <div class="rvstars">${'★'.repeat(r.s)}${'☆'.repeat(5-r.s)}</div>
+        <div class="rvtext">${r.t}</div>
+      </div>`).join('');
+  } else p2='<div style="text-align:center;padding:20px;color:var(--text3);font-size:12px">⭐ ยังไม่มีรีวิว</div>';
+
+  document.getElementById('mbody').innerHTML=
+    `<div class="tpanel on" id="tp0">${p0}</div><div class="tpanel" id="tp1">${p1}</div><div class="tpanel" id="tp2">${p2}</div>`;
+  document.getElementById('mover').classList.add('open');
+}
+
+function swTab(i,btn){
+  sTab();
+  document.querySelectorAll('.mtab').forEach((b,j)=>b.classList.toggle('on',j===i));
+  document.querySelectorAll('.tpanel').forEach((p,j)=>p.classList.toggle('on',j===i));
+}
+function closeMdlBtn(){sClose();document.getElementById('mover').classList.remove('open');}
+function closeMdlOv(e){if(e.target===document.getElementById('mover'))closeMdlBtn();}
+</script>
+</body>
+</html>
